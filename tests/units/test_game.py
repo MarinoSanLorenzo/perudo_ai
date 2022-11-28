@@ -7,6 +7,11 @@ from constants import *
 
 class TestGame:
 
+    def test_everyone_has_neighboor(self):
+        game = Game(players=[Player('Marc'), Player('Luc'), Player('Paul')])
+
+
+
     @pytest.mark.parametrize('players, n_dices', [([Player() for player in range(8)], 8*N_INIT_DICES),\
                                                  ([Player() for player in range(10)], 10*N_INIT_DICES), \
                                                  ([Player() for player in range(100)], 100*N_INIT_DICES)])

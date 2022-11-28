@@ -1,3 +1,5 @@
+import random
+
 from perudo_ai.player import Player
 from typing import *
 
@@ -19,11 +21,20 @@ class GameErrorMessage:
     )
     UNIQUE_PLAYERS_NAME = "Can not have two players with same name!"
     INVALID_DICE_TYPE = "An integer should be entered"
-
+    INVALID_GAME_TYPE = "An integer should be entered"
+#
+# class Table:
+#
+#     def __init__(self,players:List[Player]):
+#         for i, player in enumerate(players):
+#             player.left_neighbor = players[i-1]
 
 class Game:
     def __init__(self, players: Union[int, List[Player]]) -> None:
         self.players = players
+        self._round = 1
+        for i, player in enumerate(players):
+            player.left_neighbor = players[i-1]
 
     @property
     def players(self):
@@ -68,8 +79,21 @@ class Game:
         else:
             raise TypeError(GameErrorMessage.INVALID_DICE_TYPE)
 
-    def next_round(self):
-        pass
+    @property
+    def round(self) -> int:
+        return self._round
+
+    @round.setter
+    def round(self, n_round) -> None:
+        if isinstance(n_round, int):
+            self._round = n_round
+        else:
+            raise TypeError(GameErrorMessage.INVALID_GAME_TYPE)
+
+    def start_round(self):
+        if self.round ==1:
+            player_to_play = random.choice(self.players)
+
 
     def save_round_info_to_history(self):
         pass

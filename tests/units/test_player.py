@@ -1,5 +1,6 @@
 import pytest
 from perudo_ai.player import Player
+from perudo_ai.decision import Decision, Raise
 import random
 from constants import *
 import names
@@ -14,6 +15,13 @@ def player() -> Player:
 
 
 class TestPlayer:
+
+    def test_player_take_decision(self) -> None:
+        player = Player()
+        decision = player.take_decision(Decision(Raise(6, 'PACO')))
+        assert isinstance(decision, Decision)
+        assert isinstance(decision.raise_, Raise)
+
     def test_take_one_dice_out(self, player: Player) -> None:
         for n_dices_left in range(N_INIT_DICES, -1, -1):
             assert player.n_dices_left == n_dices_left
