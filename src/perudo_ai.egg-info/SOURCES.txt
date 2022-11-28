@@ -1,0 +1,10 @@
+setup.py
+perudo_ai/game.py
+perudo_ai/perudo_ai.py
+perudo_ai/player.py
+perudo_ai/proba_calculator.py
+perudo_ai/utils.py
+perudo_ai.egg-info/PKG-INFO
+perudo_ai.egg-info/SOURCES.txt
+perudo_ai.egg-info/dependency_links.txt
+perudo_ai.egg-info/top_level.txt
