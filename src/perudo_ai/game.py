@@ -22,6 +22,8 @@ class GameErrorMessage:
     UNIQUE_PLAYERS_NAME = "Can not have two players with same name!"
     INVALID_DICE_TYPE = "An integer should be entered"
     INVALID_GAME_TYPE = "An integer should be entered"
+
+
 #
 # class Table:
 #
@@ -29,15 +31,17 @@ class GameErrorMessage:
 #         for i, player in enumerate(players):
 #             player.left_neighbor = players[i-1]
 
+
 class Game:
     def __init__(self, players: Union[int, List[Player]]) -> None:
         self.players = players
         self._round = 1
         for i, player in enumerate(self.players):
-            player.left_neighbor = self.players[i-1]
-        self._rounds_history = {}
-        '''
-        {'round 1':{'decisions':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
+            player.left_neighbor = self.players[i - 1]
+        self._rounds_history: Dict[str, Any] = {}
+        """
+        {'round 1':{'decisions_given':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
+                    'decisions_received':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
                     'winner':'player_name', 
                     'looser':'player_name', 
                     'nb_total_dices_at_beginning_round': 25, 
@@ -49,7 +53,7 @@ class Game:
                     }
         'round2
         
-        '''
+        """
 
     @property
     def players(self):
@@ -82,13 +86,12 @@ class Game:
         else:
             raise TypeError(GameErrorMessage.INVALID_PLAYERS_TYPE)
 
-
     @property
     def total_nb_dices(self) -> int:
         return sum([player.n_dices_left for player in self.players])
 
     @total_nb_dices.setter
-    def total_nb_dices(self, nb_dices:int) -> None:
+    def total_nb_dices(self, nb_dices: int) -> None:
         if isinstance(nb_dices, int):
             self._total_nb_dices = nb_dices
         else:
@@ -106,9 +109,8 @@ class Game:
             raise TypeError(GameErrorMessage.INVALID_GAME_TYPE)
 
     def start_round(self):
-        if self.round ==1:
+        if self.round == 1:
             player_to_play = random.choice(self.players)
-
 
     def save_round_info_to_history(self):
         pass

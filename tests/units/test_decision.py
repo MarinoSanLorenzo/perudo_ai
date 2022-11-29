@@ -3,10 +3,10 @@ from perudo_ai.decision import Decision, Raise
 from perudo_ai.player import Player
 from typing import *
 
-class TestDecision:
 
+class TestDecision:
     def test_decision_raise(self) -> None:
-        decision = Decision(raise_=Raise(6, 'PACO'))
+        decision = Decision(raise_=Raise(6, "PACO"))
         assert isinstance(decision.raise_, Raise)
         assert decision.equal is False
         assert decision.bluff is False

@@ -10,12 +10,11 @@ class Player:
         if not name:
             name = names.get_full_name()
         self.name = name
-        self._dices = random.choices(POSSIBLE_VALUES, k=N_INIT_DICES)
-        self._n_dices_left = N_INIT_DICES
+        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=N_INIT_DICES)
+        self._n_dices_left: int = N_INIT_DICES
 
     def __repr__(self) -> str:
-        return f'Player(name={self.name})'
-
+        return f"Player(name={self.name})"
 
     @property
     def n_dices_left(self) -> int:
@@ -38,26 +37,29 @@ class Player:
     def take_one_dice_out(self) -> None:
         self.n_dices_left -= 1
 
-    def take_decision(self, decision:Union[Decision, None, str]=None) -> Decision:
+    def give_decision_to_other_player(
+        self, other_player, decision: Union[Decision, None, str] = None
+    ) -> Decision:
         if DEV_MODE:
             return decision
-        else:
+        else:  # TODO:User input
             is_input_decision_valid = False
             while not is_input_decision_valid:
-                decision = input('Do you want to raise, call for a bluff or equal?[r/b/e]')
-                if decision in ['b', 'e', 'r', 'bluff', 'equal', 'raise']:
-                    if decision in ['b', 'bluff']:
+                decision = input(
+                    "Do you want to raise, call for a bluff or equal?[r/b/e]"
+                )
+                if decision in ["b", "e", "r", "bluff", "equal", "raise"]:
+                    if decision in ["b", "bluff"]:
                         return Decision(bluff=True)
-                    elif decision in ['e', 'equal']:
+                    elif decision in ["e", "equal"]:
                         return Decision(equal=True)
-                    elif decision in ['r', 'raise']:
-                        raise_value = input('What is your raise?[Enter the number of dices then the value] eg: 5 PACO').split(' ')
-                        return Decision(raise_=Raise(int(raise_value[0]), raise_value[1]))
+                    elif decision in ["r", "raise"]:
+                        raise_value = input(
+                            "What is your raise?[Enter the number of dices then the value] eg: 5 PACO"
+                        ).split(" ")
+                        return Decision(
+                            raise_=Raise(int(raise_value[0]), raise_value[1])
+                        )
                     else:
                         raise NotImplementedError
                     is_input_decision_valid = True
-
-
-
-
-
