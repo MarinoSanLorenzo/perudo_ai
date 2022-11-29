@@ -7,9 +7,15 @@ from constants import *
 
 class TestGame:
 
+    def test_next_round(self) -> None:
+        game = Game(players=4)
+
+
     def test_everyone_has_neighboor(self):
         game = Game(players=[Player('Marc'), Player('Luc'), Player('Paul')])
-
+        assert game.players[0].left_neighbor.name == 'Paul'
+        assert game.players[1].left_neighbor.name == 'Marc'
+        assert game.players[2].left_neighbor.name == 'Luc'
 
 
     @pytest.mark.parametrize('players, n_dices', [([Player() for player in range(8)], 8*N_INIT_DICES),\
@@ -21,10 +27,9 @@ class TestGame:
 
     @pytest.mark.parametrize("players", [([Player() for player in range(8)]), (8)])
     def test_instantiate_game(self, players: Union[int, List[Player]]) -> None:
-        try:
-            game = Game(players=players)
-        except Exception:
-            pytest.fail
+
+        game = Game(players=players)
+
 
         assert len(game.players) == 8
 
