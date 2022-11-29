@@ -33,8 +33,23 @@ class Game:
     def __init__(self, players: Union[int, List[Player]]) -> None:
         self.players = players
         self._round = 1
-        for i, player in enumerate(players):
-            player.left_neighbor = players[i-1]
+        for i, player in enumerate(self.players):
+            player.left_neighbor = self.players[i-1]
+        self._rounds_history = {}
+        '''
+        {'round 1':{'decisions':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
+                    'winner':'player_name', 
+                    'looser':'player_name', 
+                    'nb_total_dices_at_beginning_round': 25, 
+                    'nb_total_dices_at_end_round': 24,
+                    'dices' :{'player_1_name':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....},
+                    'n_dices':{'player_1_name':5, 'player_2_name':5},
+                    'n_players':4,
+                    'player-left_player':['player_1_name-player_2_name', 'player_2_name-player_3_name', 'player_3_name-player_1_name']
+                    }
+        'round2
+        
+        '''
 
     @property
     def players(self):

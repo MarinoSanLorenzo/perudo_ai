@@ -1,3 +1,4 @@
 /venv/
 /.idea/
 /.pytest_cache/
+run_git_pipeline.bat
