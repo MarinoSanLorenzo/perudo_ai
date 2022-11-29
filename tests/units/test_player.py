@@ -15,10 +15,10 @@ def player() -> Player:
 
 
 class TestPlayer:
-
-    def test_player_take_decision(self) -> None:
-        player = Player()
-        decision = player.take_decision(Decision(Raise(6, 'PACO')))
+    def test_player_give_decision_to_other_player(self) -> None:
+        player1 = Player("Player 1")
+        player2 = Player("Player 2")
+        decision = player1.take_decision(player2, Decision(Raise(6, "PACO")))
         assert isinstance(decision, Decision)
         assert isinstance(decision.raise_, Raise)
 
