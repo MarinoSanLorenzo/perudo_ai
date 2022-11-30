@@ -26,12 +26,15 @@ class Game:
         self._round = 1
         players_lst = list(self.players.values())
         for i, player in enumerate(players_lst):
-            player.left_neighbor = players_lst[i - 1]
+            player.left_player = players_lst[i - 1]
         self.n_max_dices: int = len(players_lst) * n_init_dices
         self._rounds_history: Dict[str, Any] = {}
         """
         {'round 1':{'decisions_given':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
                     'decisions_received':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
+                    'decisions_pairs':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
+                    'pair_decision_outcomes':[{'right_player_decision':Decision1 , 'right_player_name':'player_1_name', 'left_player_decision':Decision2 , 'left_player_name':'player_2_name', 'decision_outcome': 'Player 3 to talk','is_round_finished':False, 'hand_nb':0', 'dices_details':None, 'total_dices':None},\
+                                            {'right_player_decision':Decision2 , 'left_player_decision':Decision3 , 'decision_outcome': 'Player 3 looses dices,'is_round_finished':True, 'hand_nb':1', 'dices_details':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....} '}, 'total_dices':{'6':1, '2':1, '5':3, '3':2, 'PACO':3}],
                     'winner':'player_name', 
                     'looser':'player_name', 
                     'nb_total_dices_at_beginning_round': 25, 
@@ -116,9 +119,30 @@ class Game:
             player_to_play = random.choice(self.players.values())
 
     def process_decisions(
-        self, decision_right_player: Decision, decision_left_player: Decision
+        self,
+        right_player_decision: Tuple[Player, Decision],
+        left_player_decision: Tuple[Player, Decision],
+        hand_nb: int,
     ) -> Dict[str, Any]:
-        pass
+        left_player, left_player_decision = left_player_decision
+        right_player, right_player_decision = right_player_decision
+        right_player_name, left_player_name = right_player.name, left_player.name
+        is_round_finished = False
+        dices_details = None
+        total_dices = None
+        if left_player_decision.raise_:  # RAISE
+            decision_outcome = f"{left_player.left_player.name} to talk"
+            return {
+                "right_player_decision": right_player_decision,
+                "left_player_decision": left_player_decision,
+                "right_player_name": right_player_name,
+                "left_player_name": left_player_name,
+                "decision_outcome": decision_outcome,
+                "is_round_finished": is_round_finished,
+                "hand_nb": hand_nb,
+                "dices_details": dices_details,
+                "total_dices": total_dices,
+            }
 
     @property
     def n_max_dices(self) -> int:
