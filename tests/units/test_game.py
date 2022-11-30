@@ -8,14 +8,32 @@ from constants import *
 
 
 class TestGame:
-    @pytest.mark.skip()
-    def test_process_decisions(self) -> None:
+    def test_process_decisions_raise(self) -> None:
+        round = 0
+        hand_nb = 0
         game = Game(players=[Player("Marc"), Player("Luc")])
-        player_0, player_1 = game.players.get("Marc"), game.players.get("Luc")
-        decision_right_player, decision_left_player = Decision(Raise(5, "2")), Decision(
+        right_player, left_player = game.players.get("Marc"), game.players.get("Luc")
+        right_player_decision, left_player_decision = Decision(Raise(5, "2")), Decision(
             5, "3"
         )
-        game.process_decisions()
+        decisions_outcome = game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb,
+        )
+        assert isinstance(decisions_outcome, dict)
+        assert decisions_outcome.get("right_player_decision") == right_player_decision
+        assert decisions_outcome.get("left_player_decision") == left_player_decision
+        assert decisions_outcome.get("right_player_name") == right_player.name
+        assert decisions_outcome.get("left_player_name") == left_player.name
+        assert (
+            decisions_outcome.get("decision_outcome")
+            == f"{left_player.left_player.name} to talk"
+        )
+        assert decisions_outcome.get("is_round_finished") == False
+        assert decisions_outcome.get("hand_nb") == hand_nb
+        assert decisions_outcome.get("dices_details") == None
+        assert decisions_outcome.get("total_dices") == None
 
     @pytest.mark.parametrize(
         "n_players, n_init_dices",
@@ -59,9 +77,9 @@ class TestGame:
 
     def test_everyone_has_neighboor(self):
         game = Game(players=[Player("Marc"), Player("Luc"), Player("Paul")])
-        assert game.players.get("Marc").left_neighbor.name == "Paul"
-        assert game.players.get("Luc").left_neighbor.name == "Marc"
-        assert game.players.get("Paul").left_neighbor.name == "Luc"
+        assert game.players.get("Marc").left_player.name == "Paul"
+        assert game.players.get("Luc").left_player.name == "Marc"
+        assert game.players.get("Paul").left_player.name == "Luc"
 
     @pytest.mark.parametrize(
         "players, n_dices",
