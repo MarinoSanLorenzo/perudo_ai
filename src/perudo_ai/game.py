@@ -1,43 +1,33 @@
 import random
 
 from perudo_ai.player import Player
+from perudo_ai.decision import Decision
+from constants import *
 from typing import *
+from perudo_ai.custom_exceptions_and_errors import *
 
-__all__ = ["Game", "GameErrorMessage"]
-
-
-class Decision:
-    pass
+__all__ = [
+    "Game",
+]
 
 
 class Round:
     pass
 
 
-class GameErrorMessage:
-    LESS_THAN_TWO_PLAYERS = "There can not be less than two players!"
-    INVALID_PLAYERS_TYPE = (
-        "A list of players or a number of players (integer) should be entered!"
-    )
-    UNIQUE_PLAYERS_NAME = "Can not have two players with same name!"
-    INVALID_DICE_TYPE = "An integer should be entered"
-    INVALID_GAME_TYPE = "An integer should be entered"
-
-
-#
-# class Table:
-#
-#     def __init__(self,players:List[Player]):
-#         for i, player in enumerate(players):
-#             player.left_neighbor = players[i-1]
-
-
 class Game:
-    def __init__(self, players: Union[int, List[Player]]) -> None:
+    def __init__(
+        self,
+        players: Union[int, List[Player]] = N_PLAYERS,
+        n_init_dices: int = N_INIT_DICES,
+    ) -> None:
+        self.n_init_dices = n_init_dices
         self.players = players
         self._round = 1
-        for i, player in enumerate(self.players):
-            player.left_neighbor = self.players[i - 1]
+        players_lst = list(self.players.values())
+        for i, player in enumerate(players_lst):
+            player.left_neighbor = players_lst[i - 1]
+        self.n_max_dices: int = len(players_lst) * n_init_dices
         self._rounds_history: Dict[str, Any] = {}
         """
         {'round 1':{'decisions_given':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
@@ -49,53 +39,66 @@ class Game:
                     'dices' :{'player_1_name':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....},
                     'n_dices':{'player_1_name':5, 'player_2_name':5},
                     'n_players':4,
-                    'player-left_player':['player_1_name-player_2_name', 'player_2_name-player_3_name', 'player_3_name-player_1_name']
+                    'player-left_player':['player_1_name-player_2_name', 'player_2_name-player_3_name', 'player_3_name-player_1_name'],
                     }
         'round2
         
         """
 
     @property
-    def players(self):
+    def players(self) -> Dict[str, Player]:
         return self._players
 
     @players.setter
     def players(self, players: Union[int, List[Player]]) -> None:
         if isinstance(players, int):
             if players >= 2:
-                self._players = [
-                    Player() for _ in range(players)
+                players_lst = [
+                    Player(n_init_dices=self.n_init_dices)
+                    for _ in range(
+                        players
+                    )  # game makes sure that the players have the same dices as the game prescribes
                 ]  # TODO: check unique names
+                self._players = {player.name: player for player in players_lst}
             elif players < 2:
-                raise ValueError(GameErrorMessage.LESS_THAN_TWO_PLAYERS)
+                raise InvalidGameInput(players, GameErrorMessage.LESS_THAN_TWO_PLAYERS)
             else:
                 raise NotImplementedError
         elif isinstance(players, list):
             if all([isinstance(player, Player) for player in players]):
                 if len(players) >= 2:
                     if len(set([player.name for player in players])) == len(players):
-                        self._players = players
+                        for (
+                            player
+                        ) in (
+                            players
+                        ):  # game makes sure that the players have the same dices as the game prescribes
+                            player.n_init_dices = self.n_init_dices
+                        self._players = {player.name: player for player in players}
                     elif len(set([player.name for player in players])) != len(players):
-                        raise ValueError(GameErrorMessage.UNIQUE_PLAYERS_NAME)
+                        raise InvalidGameInput(
+                            "".join([player.name for player in players]),
+                            GameErrorMessage.UNIQUE_PLAYERS_NAME,
+                        )
                     else:
                         raise NotImplementedError
                 elif len(players) < 2:
-                    raise ValueError(GameErrorMessage.LESS_THAN_TWO_PLAYERS)
+                    raise InvalidGameInput(GameErrorMessage.LESS_THAN_TWO_PLAYERS)
             else:
-                raise TypeError(GameErrorMessage.INVALID_PLAYERS_TYPE)
+                raise InvalidGameInput(GameErrorMessage.INVALID_PLAYERS_TYPE)
         else:
-            raise TypeError(GameErrorMessage.INVALID_PLAYERS_TYPE)
+            raise InvalidGameInput(GameErrorMessage.INVALID_PLAYERS_TYPE)
 
     @property
     def total_nb_dices(self) -> int:
-        return sum([player.n_dices_left for player in self.players])
+        return sum([player.n_dices_left for player in self.players.values()])
 
     @total_nb_dices.setter
     def total_nb_dices(self, nb_dices: int) -> None:
         if isinstance(nb_dices, int):
             self._total_nb_dices = nb_dices
         else:
-            raise TypeError(GameErrorMessage.INVALID_DICE_TYPE)
+            raise InvalidGameInput(nb_dices, GameErrorMessage.INVALID_DICE_TYPE)
 
     @property
     def round(self) -> int:
@@ -106,11 +109,37 @@ class Game:
         if isinstance(n_round, int):
             self._round = n_round
         else:
-            raise TypeError(GameErrorMessage.INVALID_GAME_TYPE)
+            raise InvalidGameInput(n_round, GameErrorMessage.INVALID_GAME_TYPE)
 
-    def start_round(self):
+    def start_round(self):  # TODO
         if self.round == 1:
-            player_to_play = random.choice(self.players)
+            player_to_play = random.choice(self.players.values())
+
+    def process_decisions(
+        self, decision_right_player: Decision, decision_left_player: Decision
+    ) -> Dict[str, Any]:
+        pass
+
+    @property
+    def n_max_dices(self) -> int:
+        return self._n_max_dices
+
+    @n_max_dices.setter
+    def n_max_dices(self, n_max_dices: int) -> None:
+        if isinstance(n_max_dices, int) and n_max_dices >= 0:
+            self._n_max_dices = n_max_dices
+        else:
+            raise InvalidGameInput(n_max_dices, GameErrorMessage.INVALID_GAME_INPUT)
+
+    @property
+    def n_init_dices(self) -> int:
+        return self._n_init_dices
+
+    @n_init_dices.setter
+    def n_init_dices(self, n_dices) -> None:
+        if not (isinstance(n_dices, int) and n_dices > 0):
+            raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_GAME_INPUT)
+        self._n_init_dices = n_dices
 
     def save_round_info_to_history(self):
         pass
