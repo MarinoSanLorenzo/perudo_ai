@@ -3,15 +3,24 @@ import random
 import names
 from typing import *
 from perudo_ai.decision import Decision, Raise
+from perudo_ai.custom_exceptions_and_errors import *
 
 
 class Player:
-    def __init__(self, name: Union[str, None] = None) -> None:
+    def __init__(
+        self,
+        name: Union[str, None] = None,
+        n_players: int = N_PLAYERS,
+        n_init_dices: int = N_INIT_DICES,
+    ) -> None:
         if not name:
             name = names.get_full_name()
         self.name = name
-        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=N_INIT_DICES)
-        self._n_dices_left: int = N_INIT_DICES
+        self.n_init_dices = n_init_dices
+        self.n_players = n_players
+        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=n_init_dices)
+        self.n_dices_left = n_init_dices
+        self.n_max_dices: int = n_init_dices * n_players
 
     def __repr__(self) -> str:
         return f"Player(name={self.name})"
@@ -37,8 +46,11 @@ class Player:
     def take_one_dice_out(self) -> None:
         self.n_dices_left -= 1
 
+    def choose_decision(self) -> Decision:
+        pass
+
     def give_decision_to_other_player(
-        self, other_player, decision: Union[Decision, None, str] = None
+        self, decision: Union[Decision, None, str] = None
     ) -> Decision:
         if DEV_MODE:
             return decision
@@ -63,3 +75,36 @@ class Player:
                     else:
                         raise NotImplementedError
                     is_input_decision_valid = True
+
+    @property
+    def n_max_dices(self) -> int:
+        return self._n_max_dices
+
+    @n_max_dices.setter
+    def n_max_dices(self, n_max_dices: int) -> None:
+        if isinstance(n_max_dices, int) and n_max_dices >= 0:
+            self._n_max_dices = n_max_dices
+        else:
+            raise InvalidGameInput(
+                n_max_dices, message=GameErrorMessage.INVALID_PLAYER_INPUT
+            )
+
+    @property
+    def n_init_dices(self) -> int:
+        return self._n_init_dices
+
+    @n_init_dices.setter
+    def n_init_dices(self, n_dices) -> None:
+        if not (isinstance(n_dices, int) and n_dices > 0):
+            raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
+        self._n_init_dices = n_dices
+
+    @property
+    def n_players(self) -> int:
+        return self._n_players
+
+    @n_players.setter
+    def n_players(self, nb_players: int) -> None:
+        if not (isinstance(nb_players, int) and nb_players > 1):
+            raise InvalidGameInput(nb_players, GameErrorMessage.INVALID_PLAYER_INPUT)
+        self._n_players = nb_players
