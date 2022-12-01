@@ -19,7 +19,7 @@ class Game:
     def __init__(
         self,
         players: Union[int, List[Player]] = N_PLAYERS,
-        n_init_dices: int = N_INIT_DICES,
+        n_init_dices: int = N_INIT_DICES_PER_PLAYER,
     ) -> None:
         self.n_init_dices = n_init_dices
         self.players = players

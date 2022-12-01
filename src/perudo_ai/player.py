@@ -11,16 +11,18 @@ class Player:
         self,
         name: Union[str, None] = None,
         n_players: int = N_PLAYERS,
-        n_init_dices: int = N_INIT_DICES,
+        n_init_dices_per_player: int = N_INIT_DICES_PER_PLAYER,
     ) -> None:
         if not name:
             name = names.get_full_name()
         self.name = name
-        self.n_dices_left = n_init_dices
+        self.n_dices_left = n_init_dices_per_player
         self.n_players = n_players
-        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=n_init_dices)
+        self._dices: List[str] = random.choices(
+            POSSIBLE_VALUES, k=n_init_dices_per_player
+        )
         # self.n_dices_left = n_init_dices
-        self.n_max_dices: int = n_init_dices * n_players
+        self.n_max_dices: int = n_init_dices_per_player * n_players
 
     def __repr__(self) -> str:
         return f"Player(name={self.name})"
@@ -88,16 +90,6 @@ class Player:
             raise InvalidGameInput(
                 n_max_dices, message=GameErrorMessage.INVALID_PLAYER_INPUT
             )
-
-    # @property
-    # def n_init_dices(self) -> int:
-    #     return self._n_init_dices
-    #
-    # @n_init_dices.setter
-    # def n_init_dices(self, n_dices) -> None:
-    #     if not (isinstance(n_dices, int) and n_dices > 0):
-    #         raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
-    #     self._n_init_dices = n_dices
 
     @property
     def n_players(self) -> int:

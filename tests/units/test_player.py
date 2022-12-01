@@ -7,7 +7,7 @@ from constants import *
 import names
 
 POSSIBLE_VALUES = params.get(Constants.POSSIBLE_VALUES)
-N_INIT_DICES = params.get(Constants.N_INIT_DICES)
+N_INIT_DICES_PER_PLAYER = params.get(Constants.N_INIT_DICES_PER_PLAYER)
 
 
 @pytest.fixture
@@ -19,10 +19,10 @@ class TestPlayer:
     @pytest.mark.parametrize(
         "n_players, n_init_dices",
         [
-            (-N_PLAYERS, -N_INIT_DICES),
-            (-10, N_INIT_DICES),
-            (8, -N_INIT_DICES),
-            (1, N_INIT_DICES),
+            (-N_PLAYERS, -N_INIT_DICES_PER_PLAYER),
+            (-10, N_INIT_DICES_PER_PLAYER),
+            (8, -N_INIT_DICES_PER_PLAYER),
+            (1, N_INIT_DICES_PER_PLAYER),
             (2, -1),
             (0, 0),
             (-1, -1),
@@ -32,7 +32,7 @@ class TestPlayer:
         self, n_players: int, n_init_dices: int
     ) -> None:
         with pytest.raises((TypeError, ValueError, InvalidGameInput)) as e:
-            Player(n_players=n_players, n_init_dices=n_init_dices)
+            Player(n_players=n_players, n_init_dices_per_player=n_init_dices)
 
         assert GameErrorMessage.INVALID_PLAYER_INPUT in str(e.value)
         # assert str(n_players) in str(e.value) or str(n_init_dices) in str(e.value)
@@ -40,10 +40,10 @@ class TestPlayer:
     @pytest.mark.parametrize(
         "player, n_players, n_init_dices",
         [
-            (Player(), N_PLAYERS, N_INIT_DICES),
-            (Player(n_players=10), 10, N_INIT_DICES),
-            (Player(n_players=8), 8, N_INIT_DICES),
-            (Player(n_players=2, n_init_dices=1), 2, 1),
+            (Player(), N_PLAYERS, N_INIT_DICES_PER_PLAYER),
+            (Player(n_players=10), 10, N_INIT_DICES_PER_PLAYER),
+            (Player(n_players=8), 8, N_INIT_DICES_PER_PLAYER),
+            (Player(n_players=2, n_init_dices_per_player=1), 2, 1),
         ],
     )
     def test_n_max_dices(
@@ -62,20 +62,20 @@ class TestPlayer:
         assert isinstance(decision.raise_, Raise)
 
     def test_take_one_dice_out(self, player: Player) -> None:
-        for n_dices_left in range(N_INIT_DICES, 0, -1):
+        for n_dices_left in range(N_INIT_DICES_PER_PLAYER, 0, -1):
             assert player.n_dices_left == n_dices_left
             player.take_one_dice_out()
 
     @pytest.mark.parametrize(
         "n_dices_lost, n_dices_left",
         [
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
-            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
+            (1, N_INIT_DICES_PER_PLAYER - 1),
         ],
     )
     def test_dices_setter(
@@ -96,11 +96,11 @@ class TestPlayer:
 
     def test_init_dices_player(self) -> None:
 
-        dices = random.choices(POSSIBLE_VALUES, k=N_INIT_DICES)
+        dices = random.choices(POSSIBLE_VALUES, k=N_INIT_DICES_PER_PLAYER)
 
         player = Player("player-test")
         assert len(player.dices) == len(dices)
-        assert len(player.dices) == N_INIT_DICES
+        assert len(player.dices) == N_INIT_DICES_PER_PLAYER
         for dice in player.dices:
             assert dice in POSSIBLE_VALUES
-        assert player.n_dices_left == N_INIT_DICES
+        assert player.n_dices_left == N_INIT_DICES_PER_PLAYER

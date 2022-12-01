@@ -18,7 +18,7 @@ class TestGame:
                 Decision(Raise(10, "2")),
                 Decision(Raise(10, "3")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -27,7 +27,7 @@ class TestGame:
                 Decision(Raise(15, "3")),
                 Decision(Raise(15, "4")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -36,7 +36,7 @@ class TestGame:
                 Decision(Raise(14, "6")),
                 Decision(Raise(15, "6")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -45,7 +45,7 @@ class TestGame:
                 Decision(Raise(30, "3")),
                 Decision(Raise(30, "4")),
                 0,
-                N_INIT_DICES * 2,
+                N_INIT_DICES_PER_PLAYER * 2,
             ),
         ],
     )
@@ -80,7 +80,7 @@ class TestGame:
                 Decision(Raise(11, "2")),
                 Decision(Raise(11, "3")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -89,7 +89,7 @@ class TestGame:
                 Decision(Raise(16, "3")),
                 Decision(Raise(14, "4")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -98,7 +98,7 @@ class TestGame:
                 Decision(Raise(14, "3")),
                 Decision(Raise(16, "4")),
                 0,
-                N_INIT_DICES,
+                N_INIT_DICES_PER_PLAYER,
             ),
             (
                 [Player("Marc"), Player("Luc"), Player("Louis")],
@@ -107,7 +107,7 @@ class TestGame:
                 Decision(Raise(31, "3")),
                 Decision(Raise(31, "4")),
                 0,
-                N_INIT_DICES * 2,
+                N_INIT_DICES_PER_PLAYER * 2,
             ),
         ],
     )
@@ -230,10 +230,10 @@ class TestGame:
     @pytest.mark.parametrize(
         "n_players, n_init_dices",
         [
-            (-N_PLAYERS, -N_INIT_DICES),
-            (-10, N_INIT_DICES),
-            (8, -N_INIT_DICES),
-            (1, N_INIT_DICES),
+            (-N_PLAYERS, -N_INIT_DICES_PER_PLAYER),
+            (-10, N_INIT_DICES_PER_PLAYER),
+            (8, -N_INIT_DICES_PER_PLAYER),
+            (1, N_INIT_DICES_PER_PLAYER),
             (2, 0),
             (0, 0),
             (-1, -1),
@@ -254,9 +254,9 @@ class TestGame:
     @pytest.mark.parametrize(
         "game, n_players, n_init_dices",
         [
-            (Game(), N_PLAYERS, N_INIT_DICES),
-            (Game(players=10), 10, N_INIT_DICES),
-            (Game(players=8), 8, N_INIT_DICES),
+            (Game(), N_PLAYERS, N_INIT_DICES_PER_PLAYER),
+            (Game(players=10), 10, N_INIT_DICES_PER_PLAYER),
+            (Game(players=8), 8, N_INIT_DICES_PER_PLAYER),
             (Game(players=2, n_init_dices=1), 2, 1),
         ],
     )
@@ -276,9 +276,9 @@ class TestGame:
     @pytest.mark.parametrize(
         "players, n_dices",
         [
-            ([Player() for player in range(8)], 8 * N_INIT_DICES),
-            ([Player() for player in range(10)], 10 * N_INIT_DICES),
-            ([Player() for player in range(100)], 100 * N_INIT_DICES),
+            ([Player() for player in range(8)], 8 * N_INIT_DICES_PER_PLAYER),
+            ([Player() for player in range(10)], 10 * N_INIT_DICES_PER_PLAYER),
+            ([Player() for player in range(100)], 100 * N_INIT_DICES_PER_PLAYER),
         ],
     )
     def test_total_nb_dices(
