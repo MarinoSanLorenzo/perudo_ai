@@ -13,6 +13,10 @@ class GameErrorMessage:
     INVALID_GAME_TYPE = "An integer should be entered"
     INVALID_GAME_INPUT = "You entered an invalid game input!"
     INVALID_PLAYER_INPUT = "You entered an invalid player input!"
+    NO_PACO_WHEN_STARTING_ROUND = "A Player can not raise, saying PACOS, when starting the first round unless he has only one dice left. Number dices left:"
+    RAISE_EXCEED_TOTAL_NB_DICES_LEFT = (
+        "The player raised over the total number of dices left in the game!"
+    )
 
 
 class GameException(Exception):

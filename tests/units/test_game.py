@@ -1,5 +1,5 @@
 import pytest
-from perudo_ai.game import Game, GameErrorMessage
+from perudo_ai.game import Game
 from perudo_ai.custom_exceptions_and_errors import *
 from perudo_ai.player import Player
 from perudo_ai.decision import Decision, Raise
@@ -8,14 +8,81 @@ from constants import *
 
 
 class TestGame:
-    def test_process_decisions_raise(self) -> None:
-        round = 0
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(5, "PACO")),
+                Decision(Raise(5, "3")),
+                0,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(6, "PACO")),
+                Decision(Raise(6, "4")),
+                0,
+            ),
+        ],
+    )
+    def test_process_decisions_invalid_raise(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+    ) -> None:
+        game = Game(players=players)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+        with pytest.raises(InvalidGameInput) as e:
+            decisions_outcome = game.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
+                hand_nb,
+            )
+        assert GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND in str(e.value)
+
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(5, "2")),
+                Decision(Raise(5, "3")),
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(6, "3")),
+                Decision(Raise(6, "4")),
+            ),
+        ],
+    )
+    def test_process_decisions_raise(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+    ) -> None:
+
         hand_nb = 0
-        game = Game(players=[Player("Marc"), Player("Luc")])
-        right_player, left_player = game.players.get("Marc"), game.players.get("Luc")
-        right_player_decision, left_player_decision = Decision(Raise(5, "2")), Decision(
-            5, "3"
-        )
+        game = Game(players=players)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
         decisions_outcome = game.process_decisions(
             (right_player, right_player_decision),
             (left_player, left_player_decision),

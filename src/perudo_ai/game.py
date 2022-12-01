@@ -124,12 +124,26 @@ class Game:
         left_player_decision: Tuple[Player, Decision],
         hand_nb: int,
     ) -> Dict[str, Any]:
-        left_player, left_player_decision = left_player_decision
-        right_player, right_player_decision = right_player_decision
+        left_player, left_player_decision = left_player_decision  # right
+        right_player, right_player_decision = right_player_decision  # start
         right_player_name, left_player_name = right_player.name, left_player.name
         is_round_finished = False
         dices_details = None
         total_dices = None
+        if (
+            (hand_nb == 0)
+            and (right_player_decision.raise_.dice_face == PACO)
+            and (right_player.n_dices_left > 1)
+        ):
+            raise InvalidGameInput(
+                right_player.n_dices_left, GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND
+            )
+        if right_player_decision.raise_.n_dices > self.total_nb_dices:
+            raise InvalidGameInput(
+                f"raise={right_player.decision.raise_.n_dices} vs total_nb_dices={self.total_nb_dices}",
+                GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
+            )
+
         if left_player_decision.raise_:  # RAISE
             decision_outcome = f"{left_player.left_player.name} to talk"
             return {
