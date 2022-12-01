@@ -15,6 +15,96 @@ class TestGame:
                 [Player("Marc"), Player("Luc")],
                 "Marc",
                 "Luc",
+                Decision(Raise(9, "PACO")),
+                Decision(Raise(9, "3")),
+                1,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "3")),
+                Decision(Raise(14, "2")),
+                0,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "4")),
+                Decision(Raise(14, "3")),
+                0,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(29, "4")),
+                Decision(Raise(29, "4")),
+                0,
+                N_INIT_DICES_PER_PLAYER * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_invalid_raise_lower_dice_value_when_same_number_dices(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+        with pytest.raises(InvalidGameInput) as e:
+            decisions_outcome = game.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
+                hand_nb,
+            )
+        assert GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES in str(
+            e.value
+        )
+
+    @pytest.mark.parametrize(
+        "dice_face1, dice_face2, outcome",
+        [
+            ("PACO", "2", True),
+            ("3", "2", True),
+            ("2", "2", False),
+            ("2", "3", False),
+            ("2", "4", False),
+            ("2", "5", False),
+            ("2", "6", False),
+            ("3", "6", False),
+            ("4", "6", False),
+            ("5", "6", False),
+            ("6", "6", False),
+            ("6", "PACO", False),
+            ("5", "2", True),
+            ("5", "3", True),
+            ("5", "4", True),
+        ],
+    )
+    def test_dice_faces_relations(
+        self, dice_face1: str, dice_face2: str, outcome: bool
+    ) -> None:
+        assert bool(dice_face1 > dice_face2) is outcome
+
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
                 Decision(Raise(10, "2")),
                 Decision(Raise(10, "3")),
                 0,

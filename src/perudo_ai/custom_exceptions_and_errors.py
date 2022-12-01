@@ -17,6 +17,7 @@ class GameErrorMessage:
     RAISE_EXCEED_TOTAL_NB_DICES_LEFT = (
         "The player raised over the total number of dices left in the game!"
     )
+    NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES = "The left player can not raise by calling a dice value lower thaN the right player when they have called the same number of dices previously."
 
 
 class GameException(Exception):

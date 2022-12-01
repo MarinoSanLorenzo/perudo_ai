@@ -128,6 +128,7 @@ class Game:
         dices_details = None
         total_dices = None
         first_play = hand_nb == 0
+        decision_outcome = None
 
         if (
             first_play
@@ -145,8 +146,22 @@ class Game:
                 GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
             )
 
-        if left_player_decision.raise_:  # RAISE
-            decision_outcome = f"{left_player.left_player.name} to talk"
+        if right_player_decision.raise_ and left_player_decision.raise_:  # RAISE
+            if (
+                left_player_decision.raise_.n_dices
+                == right_player_decision.raise_.n_dices
+            ):  # same number of dices
+                if (
+                    left_player_decision.raise_.dice_face
+                    > right_player_decision.raise_.dice_face
+                ):  # higher dice value
+                    decision_outcome = f"{left_player.left_player.name} to talk"
+                else:
+                    raise InvalidGameInput(
+                        f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
+                        GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES,
+                    )
+
             return {
                 "right_player_decision": right_player_decision,
                 "left_player_decision": left_player_decision,
