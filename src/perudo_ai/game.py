@@ -25,8 +25,11 @@ class Game:
         self.players = players
         self._round = 1
         players_lst = list(self.players.values())
-        for i, player in enumerate(players_lst):
+        for i, player in enumerate(
+            players_lst
+        ):  # game attributes a left player to all players and also the same number of dices
             player.left_player = players_lst[i - 1]
+            player.n_dices_left = n_init_dices
         self.n_max_dices: int = len(players_lst) * n_init_dices
         self._rounds_history: Dict[str, Any] = {}
         """
@@ -57,7 +60,7 @@ class Game:
         if isinstance(players, int):
             if players >= 2:
                 players_lst = [
-                    Player(n_init_dices=self.n_init_dices)
+                    Player()
                     for _ in range(
                         players
                     )  # game makes sure that the players have the same dices as the game prescribes
@@ -71,12 +74,6 @@ class Game:
             if all([isinstance(player, Player) for player in players]):
                 if len(players) >= 2:
                     if len(set([player.name for player in players])) == len(players):
-                        for (
-                            player
-                        ) in (
-                            players
-                        ):  # game makes sure that the players have the same dices as the game prescribes
-                            player.n_init_dices = self.n_init_dices
                         self._players = {player.name: player for player in players}
                     elif len(set([player.name for player in players])) != len(players):
                         raise InvalidGameInput(
@@ -120,27 +117,31 @@ class Game:
 
     def process_decisions(
         self,
-        right_player_decision: Tuple[Player, Decision],
-        left_player_decision: Tuple[Player, Decision],
+        right_player_decision_pair: Tuple[Player, Decision],
+        left_player_decision_pair: Tuple[Player, Decision],
         hand_nb: int,
     ) -> Dict[str, Any]:
-        left_player, left_player_decision = left_player_decision  # right
-        right_player, right_player_decision = right_player_decision  # start
+        left_player, left_player_decision = left_player_decision_pair  # right
+        right_player, right_player_decision = right_player_decision_pair  # start
         right_player_name, left_player_name = right_player.name, left_player.name
         is_round_finished = False
         dices_details = None
         total_dices = None
+        first_play = hand_nb == 0
+
         if (
-            (hand_nb == 0)
+            first_play
             and (right_player_decision.raise_.dice_face == PACO)
             and (right_player.n_dices_left > 1)
         ):
             raise InvalidGameInput(
                 right_player.n_dices_left, GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND
             )
-        if right_player_decision.raise_.n_dices > self.total_nb_dices:
+        if (right_player_decision.raise_.n_dices > self.total_nb_dices) or (
+            left_player_decision.raise_.n_dices > self.total_nb_dices
+        ):
             raise InvalidGameInput(
-                f"raise={right_player.decision.raise_.n_dices} vs total_nb_dices={self.total_nb_dices}",
+                f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={self.total_nb_dices}",
                 GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
             )
 

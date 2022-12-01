@@ -16,10 +16,10 @@ class Player:
         if not name:
             name = names.get_full_name()
         self.name = name
-        self.n_init_dices = n_init_dices
+        self.n_dices_left = n_init_dices
         self.n_players = n_players
         self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=n_init_dices)
-        self.n_dices_left = n_init_dices
+        # self.n_dices_left = n_init_dices
         self.n_max_dices: int = n_init_dices * n_players
 
     def __repr__(self) -> str:
@@ -35,10 +35,10 @@ class Player:
 
     @n_dices_left.setter
     def n_dices_left(self, n_dices: int) -> None:
-        if n_dices < 0:
-            self._n_dices_left = 0
-        else:
-            self._n_dices_left = n_dices
+        if not (isinstance(n_dices, int) and n_dices >= 0):
+            raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
+        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=n_dices)
+        self._n_dices_left = n_dices
 
     def shuffle_dices(self) -> None:
         self._dices = random.choices(POSSIBLE_VALUES, k=self.n_dices_left)
@@ -89,15 +89,15 @@ class Player:
                 n_max_dices, message=GameErrorMessage.INVALID_PLAYER_INPUT
             )
 
-    @property
-    def n_init_dices(self) -> int:
-        return self._n_init_dices
-
-    @n_init_dices.setter
-    def n_init_dices(self, n_dices) -> None:
-        if not (isinstance(n_dices, int) and n_dices > 0):
-            raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
-        self._n_init_dices = n_dices
+    # @property
+    # def n_init_dices(self) -> int:
+    #     return self._n_init_dices
+    #
+    # @n_init_dices.setter
+    # def n_init_dices(self, n_dices) -> None:
+    #     if not (isinstance(n_dices, int) and n_dices > 0):
+    #         raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
+    #     self._n_init_dices = n_dices
 
     @property
     def n_players(self) -> int:

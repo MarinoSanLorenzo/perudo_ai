@@ -9,6 +9,131 @@ from constants import *
 
 class TestGame:
     @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(10, "2")),
+                Decision(Raise(10, "3")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(15, "3")),
+                Decision(Raise(15, "4")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "6")),
+                Decision(Raise(15, "6")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(30, "3")),
+                Decision(Raise(30, "4")),
+                0,
+                N_INIT_DICES * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_equal_num_max_dices_no_error(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+
+        decisions_outcome = game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb,
+        )
+
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(11, "2")),
+                Decision(Raise(11, "3")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(16, "3")),
+                Decision(Raise(14, "4")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "3")),
+                Decision(Raise(16, "4")),
+                0,
+                N_INIT_DICES,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(31, "3")),
+                Decision(Raise(31, "4")),
+                0,
+                N_INIT_DICES * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_invalid_raise_more_dices_than_left(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+        with pytest.raises(InvalidGameInput) as e:
+            decisions_outcome = game.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
+                hand_nb,
+            )
+        assert GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT in str(e.value)
+
+    @pytest.mark.parametrize(
         "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb",
         [
             (
@@ -29,7 +154,7 @@ class TestGame:
             ),
         ],
     )
-    def test_process_decisions_invalid_raise(
+    def test_process_decisions_invalid_raise_paco_first_round(
         self,
         players: List[Player],
         right_player_name: str,
@@ -136,7 +261,7 @@ class TestGame:
         ],
     )
     def test_n_max_dices_in_game(
-        self, game: Game(), n_players: int, n_init_dices: int
+        self, game: Game, n_players: int, n_init_dices: int
     ) -> None:
         assert len(list(game.players.values())[0].dices) == n_init_dices, "1"
         assert list(game.players.values())[0].n_dices_left == n_init_dices, "2"

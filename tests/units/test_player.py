@@ -23,7 +23,7 @@ class TestPlayer:
             (-10, N_INIT_DICES),
             (8, -N_INIT_DICES),
             (1, N_INIT_DICES),
-            (2, 0),
+            (2, -1),
             (0, 0),
             (-1, -1),
         ],
@@ -62,22 +62,20 @@ class TestPlayer:
         assert isinstance(decision.raise_, Raise)
 
     def test_take_one_dice_out(self, player: Player) -> None:
-        for n_dices_left in range(N_INIT_DICES, -1, -1):
+        for n_dices_left in range(N_INIT_DICES, 0, -1):
             assert player.n_dices_left == n_dices_left
             player.take_one_dice_out()
-        player.take_one_dice_out()
-        assert player.n_dices_left == 0
 
     @pytest.mark.parametrize(
         "n_dices_lost, n_dices_left",
         [
-            (N_INIT_DICES + 1, 0),
-            (0, N_INIT_DICES - 0),
             (1, N_INIT_DICES - 1),
-            (2, N_INIT_DICES - 2),
-            (3, N_INIT_DICES - 3),
-            (4, N_INIT_DICES - 4),
-            (5, N_INIT_DICES - 5),
+            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES - 1),
+            (1, N_INIT_DICES - 1),
         ],
     )
     def test_dices_setter(
