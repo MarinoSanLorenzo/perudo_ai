@@ -6,6 +6,7 @@ from perudo_ai.decision import Decision
 from constants import *
 from typing import *
 from perudo_ai.custom_exceptions_and_errors import *
+from collections import Counter
 
 __all__ = [
     "Game",
@@ -37,13 +38,14 @@ class Game:
         {'round 1':{'decisions_given':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
                     'decisions_received':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
                     'decisions_pairs':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
-                    'pair_decision_outcomes':[{'right_player_decision':Decision1 , 'right_player_name':'player_1_name', 'left_player_decision':Decision2 , 'left_player_name':'player_2_name', 'decision_outcome': 'Player 3 to talk','is_round_finished':False, 'hand_nb':0', 'dices_details':None, 'total_dices':None},\
-                                            {'right_player_decision':Decision2 , 'left_player_decision':Decision3 , 'decision_outcome': 'Player 3 looses dices,'is_round_finished':True, 'hand_nb':1', 'dices_details':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....} '}, 'total_dices':{'6':1, '2':1, '5':3, '3':2, 'PACO':3}],
+                    'pair_decision_outcomes':[{'right_player_decision':Decision1 , 'right_player_name':'player_1_name', 'left_player_decision':Decision2 , 'left_player_name':'player_2_name', 'decision_outcome': 'Player 3 to talk','is_round_finished':False, 'hand_nb':0', 'dices_details_per_player':None, 'all_dices_details':None},\
+                                            {'right_player_decision':Decision2 , 'left_player_decision':Decision3 , 'decision_outcome': 'Player 3 looses dices,'is_round_finished':True, 'hand_nb':1', 'dices_details':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....} '}, 'all_dices_details':{'6':1, '2':1, '5':3, '3':2, 'PACO':3}],
                     'winner':'player_name', 
                     'looser':'player_name', 
                     'nb_total_dices_at_beginning_round': 25, 
                     'nb_total_dices_at_end_round': 24,
-                    'dices' :{'player_1_name':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....},
+                    'dices_details_per_player' :{'player_1_name':{'6':1,, '2':1, '5 :3}, 'player_2_name:{'3':2, 'PACO':3}, ....},
+                    'all_dices_details' :{'6':1, '2':1, '5':3, '3':2, 'PACO':3, ...},
                     'n_dices':{'player_1_name':5, 'player_2_name':5},
                     'n_players':4,
                     'player-left_player':['player_1_name-player_2_name', 'player_2_name-player_3_name', 'player_3_name-player_1_name'],
@@ -126,8 +128,8 @@ class Game:
         right_player, right_player_decision = right_player_decision_pair  # start
         right_player_name, left_player_name = right_player.name, left_player.name
         is_round_finished = False
-        dices_details = None
-        total_dices = None
+        dices_details_per_player = None
+        all_dices_details = None
         first_play = hand_nb == 0
         decision_outcome = None
 
@@ -212,6 +214,11 @@ class Game:
                     raise NotImplementedError("1.3.3")
             else:  # 1.4
                 raise NotImplementedError("1.4")
+            # elif left_player_decision.bluff is True: # 2. Left player calls bluff on right player
+            #     decision_outcome = None
+            #     is_round_finished = True
+            #     dices_details_per_player = {}
+            #     all_dices_details = {}
 
             return {
                 "right_player_decision": right_player_decision,
@@ -221,8 +228,8 @@ class Game:
                 "decision_outcome": decision_outcome,
                 "is_round_finished": is_round_finished,
                 "hand_nb": hand_nb,
-                "dices_details": dices_details,
-                "total_dices": total_dices,
+                "dices_details_per_player": dices_details_per_player,
+                "all_dices_details": all_dices_details,
             }
 
     @property
@@ -245,6 +252,12 @@ class Game:
         if not (isinstance(n_dices, int) and n_dices > 0):
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_GAME_INPUT)
         self._n_init_dices = n_dices
+
+    def get_dices_details(self) -> Dict[str, Dict[str, int]]:
+        dices_details = {}
+        for player_name, player in self.players.items():
+            dices_details[player_name] = Counter(player.dices)
+        return dices_details
 
     def save_round_info_to_history(self):
         pass
