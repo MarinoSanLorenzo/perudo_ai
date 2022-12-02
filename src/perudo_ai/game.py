@@ -1,4 +1,5 @@
 import random
+import math
 
 from perudo_ai.player import Player
 from perudo_ai.decision import Decision
@@ -146,21 +147,71 @@ class Game:
                 GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
             )
 
-        if right_player_decision.raise_ and left_player_decision.raise_:  # RAISE
+        if right_player_decision.raise_ and left_player_decision.raise_:  # 1.RAISE
             if (
                 left_player_decision.raise_.n_dices
                 == right_player_decision.raise_.n_dices
-            ):  # same number of dices
+            ):  # 1.1 same number of dices
                 if (
                     left_player_decision.raise_.dice_face
                     > right_player_decision.raise_.dice_face
-                ):  # higher dice value
+                ):  # 1.1.1 higher dice value
                     decision_outcome = f"{left_player.left_player.name} to talk"
-                else:
+                else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
                     raise InvalidGameInput(
                         f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
                         GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES,
                     )
+            elif (
+                left_player_decision.raise_.n_dices
+                > right_player_decision.raise_.n_dices
+            ):  # 1.2 higher number of dices
+                decision_outcome = f"{left_player.left_player.name} to talk"
+            elif (
+                left_player_decision.raise_.n_dices
+                < right_player_decision.raise_.n_dices
+            ):  # 1.3 lower number of dices
+                half_nb_dices_pacos_needed = math.ceil(
+                    right_player_decision.raise_.n_dices / 2
+                )
+                if (
+                    left_player_decision.raise_.dice_face != "PACO"
+                ):  # 1.3.1 left player did not raise with pacos
+                    raise InvalidGameInput(
+                        GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
+                            "1.3.1.1",
+                            left_player_name,
+                            right_player_name,
+                            half_nb_dices_pacos_needed,
+                            left_player_decision.raise_.n_dices,
+                        )
+                    )
+                elif (
+                    left_player_decision.raise_.dice_face == "PACO"
+                ):  # 1.3.2 left player played with pacos
+                    if (
+                        left_player_decision.raise_.n_dices < half_nb_dices_pacos_needed
+                    ):  # 1.3.2.1 left player played with pacos but did not raise enough
+                        raise InvalidGameInput(
+                            GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
+                                "1.3.2.1",
+                                left_player_name,
+                                right_player_name,
+                                half_nb_dices_pacos_needed,
+                                left_player_decision.raise_.n_dices,
+                            )
+                        )
+                    elif (
+                        left_player_decision.raise_.n_dices
+                        >= half_nb_dices_pacos_needed
+                    ):  # 1.3.2.1 left player played with pacos but and raise enough
+                        decision_outcome = f"{left_player.left_player.name} to talk"
+                    else:  # 1.3.2.2
+                        raise NotImplementedError("1.3.2.2")
+                else:  # 1.3.3
+                    raise NotImplementedError("1.3.3")
+            else:  # 1.4
+                raise NotImplementedError("1.4")
 
             return {
                 "right_player_decision": right_player_decision,

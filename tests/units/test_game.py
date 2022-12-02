@@ -15,6 +15,72 @@ class TestGame:
                 [Player("Marc"), Player("Luc")],
                 "Marc",
                 "Luc",
+                Decision(Raise(9, "3")),
+                Decision(Raise(5, "PACO")),
+                1,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "4")),
+                Decision(Raise(7, "PACO")),
+                2,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(3, "5")),
+                Decision(Raise(2, "PACO")),
+                3,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(29, "6")),
+                Decision(Raise(15, "PACO")),
+                0,
+                N_INIT_DICES_PER_PLAYER * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_lower_number_of_dices_with_right_number_of_pacos(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+
+        decision_details = game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb,
+        )
+        assert (
+            decision_details.get("decision_outcome")
+            == f"{left_player.left_player.name} to talk"
+        )
+
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
                 Decision(Raise(9, "PACO")),
                 Decision(Raise(9, "3")),
                 1,
