@@ -5,9 +5,171 @@ from perudo_ai.player import Player
 from perudo_ai.decision import Decision, Raise
 from typing import *
 from constants import *
+from collections import Counter
 
 
 class TestGame:
+    @pytest.mark.parametrize(
+        "players, dices, total_dices",
+        [
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc")],
+                [
+                    ["2", "2", "PACO", "PACO", "5"],
+                    ["3", "3", "PACO", "PACO", "6"],
+                    ["2", "2", "PACO", "PACO", "5"],
+                ],
+                {
+                    "Marc": {"2": 2, "PACO": 2, "5": 1},
+                    "Jean": {"3": 2, "PACO": 2, "5": 1},
+                    "Luc": {"2": 2, "PACO": 2, "5": 1},
+                },
+            ),
+        ],
+    )
+    def test_get_dices_details_per_player(
+        self, players: List[Player], dices: List[List[str]], total_dices: Dict[str, int]
+    ) -> None:
+        dices_details_expected = {}
+        game = Game(players=players)
+        for player, dice in zip(game.players.values(), dices):
+            player._dices = dice
+            dices_details_expected[player.name] = Counter(player.dices)
+
+        dices_details_actual = game.get_dices_details()
+        for player_name, dice_details in dices_details_expected.items():
+            for dice_face, nb_dice in dice_details.items():
+                assert (
+                    dices_details_actual[player_name][dice_face] == nb_dice
+                ), f"player_name={player_name}, dices_details_expected={dice_details} vs  dices_details_expected={dices_details_expected} | [{nb_dice}x{dice_face}]"
+
+    @pytest.mark.skip("reason not implemented yet")
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(9, "3")),
+                Decision(bluff=True),
+                1,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "4")),
+                Decision(bluff=True),
+                2,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(3, "5")),
+                Decision(bluff=True),
+                3,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(29, "6")),
+                Decision(bluff=True),
+                0,
+                N_INIT_DICES_PER_PLAYER * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_left_player_call_bluff(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+
+        decision_details = game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb,
+        )
+
+    @pytest.mark.parametrize(
+        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
+        [
+            (
+                [Player("Marc"), Player("Luc")],
+                "Marc",
+                "Luc",
+                Decision(Raise(9, "3")),
+                Decision(Raise(5, "4")),
+                1,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(14, "4")),
+                Decision(Raise(6, "PACO")),
+                2,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(3, "5")),
+                Decision(Raise(2, "6")),
+                3,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
+                Decision(Raise(29, "6")),
+                Decision(Raise(14, "PACO")),
+                0,
+                N_INIT_DICES_PER_PLAYER * 2,
+            ),
+        ],
+    )
+    def test_process_decisions_invalid_lower_number_of_dices_with__pacos(
+        self,
+        players: List[Player],
+        right_player_name: str,
+        left_player_name: str,
+        right_player_decision: Decision,
+        left_player_decision: Decision,
+        hand_nb: int,
+        n_init_dices: int,
+    ) -> None:
+        game = Game(players=players, n_init_dices=n_init_dices)
+        right_player, left_player = game.players.get(
+            right_player_name
+        ), game.players.get(left_player_name)
+
+        with pytest.raises(InvalidGameInput) as e:
+            decision_details = game.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
+                hand_nb,
+            )
+        assert "1.3.1.1" in str(e.value) or "1.3.2.1" in str(e.value)
+
     @pytest.mark.parametrize(
         "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
         [
