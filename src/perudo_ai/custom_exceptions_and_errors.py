@@ -1,4 +1,5 @@
 from typing import *
+from constants import PACO
 
 __all__ = ["GameErrorMessage", "InvalidGameInput", "GameException"]
 
@@ -18,6 +19,9 @@ class GameErrorMessage:
         "The player raised over the total number of dices left in the game!"
     )
     NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES = "The left player can not raise by calling a dice value lower thaN the right player when they have called the same number of dices previously."
+    NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS = (
+        lambda error_code, left_player_name, right_player_name, half_dice, actual_dice: f"[{error_code}] The left player:\t{left_player_name} can only raise with less dices if there at least half of the dices ({half_dice} vs {actual_dice}) from the right player {right_player_name} in {PACO}s"
+    )
 
 
 class GameException(Exception):
