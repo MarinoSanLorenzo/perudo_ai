@@ -15,11 +15,11 @@ class TestGame:
             (
                 [Player(name="Marc"), Player("Jean"), Player("Luc")],
                 [
-                    ["2", "2", "PACO", "PACO", "5"],
-                    ["3", "3", "PACO", "PACO", "6"],
-                    ["2", "2", "PACO", "PACO", "5"],
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
                 ],
-                {"2": 4, "PACO": 6, "5": 2, "3": 2, "6": 1},
+                {"2": 4, PACO: 6, "5": 2, "3": 2, "6": 1},
             ),
         ],
     )
@@ -45,14 +45,14 @@ class TestGame:
             (
                 [Player(name="Marc"), Player("Jean"), Player("Luc")],
                 [
-                    ["2", "2", "PACO", "PACO", "5"],
-                    ["3", "3", "PACO", "PACO", "6"],
-                    ["2", "2", "PACO", "PACO", "5"],
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
                 ],
                 {
-                    "Marc": {"2": 2, "PACO": 2, "5": 1},
-                    "Jean": {"3": 2, "PACO": 2, "5": 1},
-                    "Luc": {"2": 2, "PACO": 2, "5": 1},
+                    "Marc": {"2": 2, PACO: 2, "5": 1},
+                    "Jean": {"3": 2, PACO: 2, "5": 1},
+                    "Luc": {"2": 2, PACO: 2, "5": 1},
                 },
             ),
         ],
@@ -153,7 +153,7 @@ class TestGame:
                 "Marc",
                 "Louis",
                 Decision(Raise(14, "4")),
-                Decision(Raise(6, "PACO")),
+                Decision(Raise(6, PACO)),
                 2,
                 N_INIT_DICES_PER_PLAYER,
             ),
@@ -170,14 +170,23 @@ class TestGame:
                 [Player("Marc"), Player("Luc"), Player("Louis")],
                 "Marc",
                 "Louis",
+                Decision(Raise(3, PACO)),
+                Decision(Raise(6, "6")),
+                3,
+                N_INIT_DICES_PER_PLAYER,
+            ),
+            (
+                [Player("Marc"), Player("Luc"), Player("Louis")],
+                "Marc",
+                "Louis",
                 Decision(Raise(29, "6")),
-                Decision(Raise(14, "PACO")),
+                Decision(Raise(14, PACO)),
                 0,
                 N_INIT_DICES_PER_PLAYER * 2,
             ),
         ],
     )
-    def test_process_decisions_invalid_lower_number_of_dices_with__pacos(
+    def test_process_decisions_invalid_lower_number_of_dices_with_pacos(
         self,
         players: List[Player],
         right_player_name: str,
@@ -198,7 +207,11 @@ class TestGame:
                 (left_player, left_player_decision),
                 hand_nb,
             )
-        assert "1.3.1.1" in str(e.value) or "1.3.2.1" in str(e.value)
+        assert (
+            "1.3.1.1" in str(e.value)
+            or "1.3.2.1" in str(e.value)
+            or "1.2.1.2.2" in str(e.value)
+        )
 
     @pytest.mark.parametrize(
         "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
@@ -208,7 +221,7 @@ class TestGame:
                 "Marc",
                 "Luc",
                 Decision(Raise(9, "3")),
-                Decision(Raise(5, "PACO")),
+                Decision(Raise(5, PACO)),
                 1,
                 N_INIT_DICES_PER_PLAYER,
             ),
@@ -217,7 +230,7 @@ class TestGame:
                 "Marc",
                 "Louis",
                 Decision(Raise(14, "4")),
-                Decision(Raise(7, "PACO")),
+                Decision(Raise(7, PACO)),
                 2,
                 N_INIT_DICES_PER_PLAYER,
             ),
@@ -226,7 +239,7 @@ class TestGame:
                 "Marc",
                 "Louis",
                 Decision(Raise(3, "5")),
-                Decision(Raise(2, "PACO")),
+                Decision(Raise(2, PACO)),
                 3,
                 N_INIT_DICES_PER_PLAYER,
             ),
@@ -235,7 +248,7 @@ class TestGame:
                 "Marc",
                 "Louis",
                 Decision(Raise(29, "6")),
-                Decision(Raise(15, "PACO")),
+                Decision(Raise(15, PACO)),
                 0,
                 N_INIT_DICES_PER_PLAYER * 2,
             ),
@@ -273,7 +286,7 @@ class TestGame:
                 [Player("Marc"), Player("Luc")],
                 "Marc",
                 "Luc",
-                Decision(Raise(9, "PACO")),
+                Decision(Raise(9, PACO)),
                 Decision(Raise(9, "3")),
                 1,
                 N_INIT_DICES_PER_PLAYER,
@@ -334,7 +347,7 @@ class TestGame:
     @pytest.mark.parametrize(
         "dice_face1, dice_face2, outcome",
         [
-            ("PACO", "2", True),
+            (PACO, "2", True),
             ("3", "2", True),
             ("2", "2", False),
             ("2", "3", False),
@@ -345,7 +358,7 @@ class TestGame:
             ("4", "6", False),
             ("5", "6", False),
             ("6", "6", False),
-            ("6", "PACO", False),
+            ("6", PACO, False),
             ("5", "2", True),
             ("5", "3", True),
             ("5", "4", True),
@@ -488,7 +501,7 @@ class TestGame:
                 [Player("Marc"), Player("Luc")],
                 "Marc",
                 "Luc",
-                Decision(Raise(5, "PACO")),
+                Decision(Raise(5, PACO)),
                 Decision(Raise(5, "3")),
                 0,
             ),
@@ -496,7 +509,7 @@ class TestGame:
                 [Player("Marc"), Player("Luc"), Player("Louis")],
                 "Marc",
                 "Louis",
-                Decision(Raise(6, "PACO")),
+                Decision(Raise(6, PACO)),
                 Decision(Raise(6, "4")),
                 0,
             ),
