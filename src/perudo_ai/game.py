@@ -168,7 +168,40 @@ class Game:
                 left_player_decision.raise_.n_dices
                 > right_player_decision.raise_.n_dices
             ):  # 1.2 higher number of dices
-                decision_outcome = f"{left_player.left_player.name} to talk"
+                if (
+                    right_player_decision.raise_.dice_face == PACO
+                ):  # 1.2.1 Left player higher number of dices but right player played PACOS
+                    if (
+                        left_player_decision.raise_.dice_face == PACO
+                    ):  # 1.2.1.1 left player played higher number of PACO
+                        decision_outcome = f"{left_player.left_player.name} to talk"
+                    elif (
+                        left_player_decision.raise_.dice_face != PACO
+                    ):  # 1.2.1.2 left player played higher number of dices but not PACOS
+                        if left_player_decision.raise_.n_dices >= (
+                            right_player_decision.raise_.n_dices * 2 + 1
+                        ):  # 1.2.1.2.1 Left player said more than twice +1
+                            decision_outcome = f"{left_player.left_player.name} to talk"
+                        elif left_player_decision.raise_.n_dices < (
+                            right_player_decision.raise_.n_dices * 2 + 1
+                        ):  # 1.2.1.2.2 Left player did not say more than twice +1
+                            raise InvalidGameInput(
+                                GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
+                                    "1.2.1.2.2",
+                                    left_player_name,
+                                    right_player_name,
+                                    right_player_decision.raise_.n_dices * 2 + 1,
+                                    left_player_decision.raise_.n_dices,
+                                )
+                            )
+                    else:
+                        raise NotImplementedError("1.2.1.3")
+                elif (
+                    right_player_decision.raise_.dice_face != PACO
+                ):  # 1.2.2 Left player higher number of dices and right player did not play pacos
+                    decision_outcome = f"{left_player.left_player.name} to talk"
+                else:
+                    raise NotImplementedError("1.2.3")
             elif (
                 left_player_decision.raise_.n_dices
                 < right_player_decision.raise_.n_dices
@@ -215,10 +248,12 @@ class Game:
             else:  # 1.4
                 raise NotImplementedError("1.4")
             # elif left_player_decision.bluff is True: # 2. Left player calls bluff on right player
-            #     decision_outcome = None
-            #     is_round_finished = True
-            #     dices_details_per_player = {}
-            #     all_dices_details = {}
+            #     all_dices_details = self.get_all_dices_details()
+            #     if right_player_decision.raise_.n_dices >= all_dices_details.get(right_player_decision.raise_.dice_face, 0): #2.1 right player has more details
+            #         decision_outcome = f'Player {right_player_name} won.\nPlayer {left_player_name} lost.'
+            #         is_round_finished = True
+            #         dices_details_per_player = {}
+            #         all_dices_details = {}
 
             return {
                 "right_player_decision": right_player_decision,
