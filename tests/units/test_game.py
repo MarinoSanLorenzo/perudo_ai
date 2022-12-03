@@ -10,6 +10,36 @@ from collections import Counter
 
 class TestGame:
     @pytest.mark.parametrize(
+        "players, dices, all_dices_details",
+        [
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc")],
+                [
+                    ["2", "2", "PACO", "PACO", "5"],
+                    ["3", "3", "PACO", "PACO", "6"],
+                    ["2", "2", "PACO", "PACO", "5"],
+                ],
+                {"2": 4, "PACO": 6, "5": 2, "3": 2, "6": 1},
+            ),
+        ],
+    )
+    def test_get_all_dices_details(
+        self,
+        players: List[Player],
+        dices: List[List[str]],
+        all_dices_details: Dict[str, int],
+    ) -> None:
+        game = Game(players=players)
+        for player, dice in zip(game.players.values(), dices):
+            player._dices = dice
+
+        all_dices_details_actual = game.get_all_dices_details()
+        for dice_face, nb_dices in all_dices_details.items():
+            assert (
+                all_dices_details_actual[dice_face] == nb_dices
+            ), f"all_dices_details_expected={all_dices_details} vs  all_dices_details_actual={all_dices_details_actual}"
+
+    @pytest.mark.parametrize(
         "players, dices, total_dices",
         [
             (
@@ -36,7 +66,7 @@ class TestGame:
             player._dices = dice
             dices_details_expected[player.name] = Counter(player.dices)
 
-        dices_details_actual = game.get_dices_details()
+        dices_details_actual = game.get_dices_details_per_player()
         for player_name, dice_details in dices_details_expected.items():
             for dice_face, nb_dice in dice_details.items():
                 assert (

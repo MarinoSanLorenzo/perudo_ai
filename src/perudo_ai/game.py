@@ -6,7 +6,7 @@ from perudo_ai.decision import Decision
 from constants import *
 from typing import *
 from perudo_ai.custom_exceptions_and_errors import *
-from collections import Counter
+from collections import Counter, defaultdict
 
 __all__ = [
     "Game",
@@ -253,11 +253,19 @@ class Game:
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_GAME_INPUT)
         self._n_init_dices = n_dices
 
-    def get_dices_details(self) -> Dict[str, Dict[str, int]]:
+    def get_dices_details_per_player(self) -> Dict[str, Dict[str, int]]:
         dices_details = {}
         for player_name, player in self.players.items():
             dices_details[player_name] = Counter(player.dices)
         return dices_details
+
+    def get_all_dices_details(self) -> Dict[str, int]:
+        dices_details_per_player = self.get_dices_details_per_player()
+        all_dices_details = defaultdict(lambda: 0)
+        for dices_details in dices_details_per_player.values():
+            for dice_face, nb_dices in dices_details.items():
+                all_dices_details[dice_face] += nb_dices
+        return all_dices_details
 
     def save_round_info_to_history(self):
         pass
