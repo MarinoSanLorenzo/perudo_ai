@@ -132,6 +132,8 @@ class Game:
         all_dices_details = None
         first_play = hand_nb == 0
         decision_outcome = None
+        decision_code = None
+        nb_dices_raised_on = None
 
         if (
             first_play
@@ -141,13 +143,17 @@ class Game:
             raise InvalidGameInput(
                 right_player.n_dices_left, GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND
             )
-        if (right_player_decision.raise_.n_dices > self.total_nb_dices) or (
-            left_player_decision.raise_.n_dices > self.total_nb_dices
-        ):
+        if right_player_decision.raise_.n_dices > self.total_nb_dices:
             raise InvalidGameInput(
                 f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={self.total_nb_dices}",
                 GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
             )
+        if left_player_decision.raise_:
+            if left_player_decision.raise_.n_dices > self.total_nb_dices:
+                raise InvalidGameInput(
+                    f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={self.total_nb_dices}",
+                    GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
+                )
 
         if right_player_decision.raise_ and left_player_decision.raise_:  # 1.RAISE
             if (
@@ -158,7 +164,10 @@ class Game:
                     left_player_decision.raise_.dice_face
                     > right_player_decision.raise_.dice_face
                 ):  # 1.1.1 higher dice value
-                    decision_outcome = f"{left_player.left_player.name} to talk"
+                    decision_outcome, decision_code = (
+                        f"{left_player.left_player.name} to talk",
+                        "1.1.1",
+                    )
                 else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
                     raise InvalidGameInput(
                         f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
@@ -174,14 +183,20 @@ class Game:
                     if (
                         left_player_decision.raise_.dice_face == PACO
                     ):  # 1.2.1.1 left player played higher number of PACO
-                        decision_outcome = f"{left_player.left_player.name} to talk"
+                        decision_outcome, decision_code = (
+                            f"{left_player.left_player.name} to talk",
+                            "1.2.1.1",
+                        )
                     elif (
                         left_player_decision.raise_.dice_face != PACO
                     ):  # 1.2.1.2 left player played higher number of dices but not PACOS
                         if left_player_decision.raise_.n_dices >= (
                             right_player_decision.raise_.n_dices * 2 + 1
                         ):  # 1.2.1.2.1 Left player said more than twice +1
-                            decision_outcome = f"{left_player.left_player.name} to talk"
+                            decision_outcome, decision_code = (
+                                f"{left_player.left_player.name} to talk",
+                                "1.2.1.2.1",
+                            )
                         elif left_player_decision.raise_.n_dices < (
                             right_player_decision.raise_.n_dices * 2 + 1
                         ):  # 1.2.1.2.2 Left player did not say more than twice +1
@@ -199,7 +214,10 @@ class Game:
                 elif (
                     right_player_decision.raise_.dice_face != PACO
                 ):  # 1.2.2 Left player higher number of dices and right player did not play pacos
-                    decision_outcome = f"{left_player.left_player.name} to talk"
+                    decision_outcome, decision_code = (
+                        f"{left_player.left_player.name} to talk",
+                        "1.2.2",
+                    )
                 else:
                     raise NotImplementedError("1.2.3")
             elif (
@@ -240,32 +258,65 @@ class Game:
                         left_player_decision.raise_.n_dices
                         >= half_nb_dices_pacos_needed
                     ):  # 1.3.2.1 left player played with pacos but and raise enough
-                        decision_outcome = f"{left_player.left_player.name} to talk"
+                        decision_outcome, decision_code = (
+                            f"{left_player.left_player.name} to talk",
+                            "1.3.2.1",
+                        )
                     else:  # 1.3.2.2
                         raise NotImplementedError("1.3.2.2")
                 else:  # 1.3.3
                     raise NotImplementedError("1.3.3")
             else:  # 1.4
                 raise NotImplementedError("1.4")
-            # elif left_player_decision.bluff is True: # 2. Left player calls bluff on right player
-            #     all_dices_details = self.get_all_dices_details()
-            #     if right_player_decision.raise_.n_dices >= all_dices_details.get(right_player_decision.raise_.dice_face, 0): #2.1 right player has more details
-            #         decision_outcome = f'Player {right_player_name} won.\nPlayer {left_player_name} lost.'
-            #         is_round_finished = True
-            #         dices_details_per_player = {}
-            #         all_dices_details = {}
+        elif (
+            left_player_decision.bluff is True
+        ):  # 2. Left player calls bluff on right player
+            all_dices_details = self.get_all_dices_details()
+            is_round_finished = True
+            dices_details_per_player = self.get_dices_details_per_player()
+            nb_dices_raised_on = (
+                all_dices_details.get(right_player_decision.raise_.dice_face, 0)
+                + all_dices_details.get(PACO, 0)
+                if right_player_decision.raise_.dice_face != PACO
+                else all_dices_details.get(PACO, 0)
+            )
+            if (
+                right_player_decision.raise_.n_dices >= nb_dices_raised_on
+            ):  # 2.1 right player has more dices
+                decision_outcome, decision_code = (
+                    f"Player {right_player_name} won.\nPlayer {left_player_name} lost.",
+                    "2.1",
+                )
+            elif (
+                right_player_decision.raise_.n_dices < nb_dices_raised_on
+            ):  # 2.2 right player has not as many dices as he claimed
+                decision_outcome, decision_code = (
+                    f"Player {right_player_name} lost.\nPlayer {left_player_name} won.",
+                    "2.2",
+                )
+            else:  # 2.3
+                raise NotImplementedError("2.3")
+        elif (
+            left_player_decision.equal is True
+        ):  # 3. Left Player calls equal on right players
+            raise NotImplementedError
 
-            return {
-                "right_player_decision": right_player_decision,
-                "left_player_decision": left_player_decision,
-                "right_player_name": right_player_name,
-                "left_player_name": left_player_name,
-                "decision_outcome": decision_outcome,
-                "is_round_finished": is_round_finished,
-                "hand_nb": hand_nb,
-                "dices_details_per_player": dices_details_per_player,
-                "all_dices_details": all_dices_details,
-            }
+        else:  # 4. not raising, nor bluffing nor equalling, do not know what it is
+            raise NotImplementedError("4")
+
+        return {
+            "right_player_decision": right_player_decision,
+            "left_player_decision": left_player_decision,
+            "right_player_name": right_player_name,
+            "left_player_name": left_player_name,
+            "decision_outcome": decision_outcome,
+            "is_round_finished": is_round_finished,
+            "hand_nb": hand_nb,
+            "dices_details_per_player": dices_details_per_player,
+            "all_dices_details": all_dices_details,
+            "decision_code": decision_code,
+            "nb_dices_raised_on": nb_dices_raised_on,
+        }
 
     @property
     def n_max_dices(self) -> int:
