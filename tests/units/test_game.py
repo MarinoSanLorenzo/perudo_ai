@@ -10,6 +10,78 @@ from collections import Counter
 
 class TestGame:
     @pytest.mark.parametrize(
+        "players, dices, right_player_name, right_player_decision, hand_nb, all_dices_details, decision_code",
+        [
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=10, dice_face="2")),
+                1,
+                {"2": 4, PACO: 6, "5": 2, "3": 2, "6": 1},
+                "2.1",
+            ),
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc"), Player("Arthur")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                    [PACO, PACO, PACO, PACO, PACO],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=13, dice_face="6")),
+                2,
+                {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
+                "2.1",
+            ),
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc"), Player("Arthur")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                    [PACO, PACO, PACO, PACO, PACO],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=9, dice_face="6")),
+                3,
+                {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
+                "2.2",
+            ),
+        ],
+    )
+    def test_process_decisions_bluff(
+        self,
+        players: List[str],
+        dices: List[List[str]],
+        right_player_name: str,
+        right_player_decision: Decision,
+        hand_nb: int,
+        all_dices_details: Dict[str, int],
+        decision_code: str,
+    ) -> None:
+        game = Game(players=players)
+        for player, dice in zip(game.players.values(), dices):
+            player._dices = dice
+        right_player = game.players.get(right_player_name)
+        left_player = right_player.left_player
+        left_player_decision = Decision(bluff=True)
+
+        decision_details = game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb,
+        )
+        # assert decision_details.get('decision_outcome') == f'Player {right_player_name} won.\nPlayer {left_player.name} lost.'
+        # assert decision_details.get('nb_dices_raised_on') == ''
+        assert decision_details.get("decision_code") == decision_code
+
+    @pytest.mark.parametrize(
         "players, dices, all_dices_details",
         [
             (
