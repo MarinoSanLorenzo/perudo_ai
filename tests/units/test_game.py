@@ -6,9 +6,103 @@ from perudo_ai.decision import Decision, Raise
 from typing import *
 from constants import *
 from collections import Counter
+import random
+
+
+@pytest.fixture
+def three_players() -> List[Player]:
+    return [Player(name="Marc"), Player("Jean"), Player("Luc")]
 
 
 class TestGame:
+    def test_right_player_can_not_call_bluff_when_first_hand(self) -> None:
+        game = Game()
+        right_player = random.choice(list(game.players.values()))
+        with pytest.raises(InvalidGameInput) as e:
+            game.process_decisions(
+                (right_player, Decision(bluff=True)),
+                (right_player.left_player, Decision(Raise("5", 2))),
+                1,
+            )
+
+        assert "bluff" in str(e.value)
+
+    @pytest.mark.parametrize(
+        "players, dices, right_player_name, right_player_decision, hand_nb, all_dices_details, loosing_player_name",
+        [
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=10, dice_face="2")),
+                0,
+                {"2": 4, PACO: 6, "5": 2, "3": 2, "6": 1},
+                "Luc",
+            ),
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc"), Player("Arthur")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                    [PACO, PACO, PACO, PACO, PACO],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=13, dice_face="6")),
+                1,
+                {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
+                "Marc",
+            ),
+            (
+                [Player(name="Marc"), Player("Jean"), Player("Luc"), Player("Arthur")],
+                [
+                    ["2", "2", PACO, PACO, "5"],
+                    ["3", "3", PACO, PACO, "6"],
+                    ["2", "2", PACO, PACO, "5"],
+                    [PACO, PACO, PACO, PACO, PACO],
+                ],
+                "Marc",
+                Decision(Raise(n_dices=9, dice_face="6")),
+                3,
+                {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
+                "Arthur",
+            ),
+        ],
+    )
+    def test_player_lose_dices_after_bluff(
+        self,
+        players: List[str],
+        dices: List[List[str]],
+        right_player_name: str,
+        right_player_decision: Decision,
+        hand_nb: int,
+        all_dices_details: Dict[str, int],
+        loosing_player_name: str,
+    ) -> None:
+        game = Game(players=players)
+        for player, dice in zip(game.players.values(), dices):
+            player._dices = dice
+        right_player = game.players.get(right_player_name)
+        left_player = right_player.left_player
+        left_player_decision = Decision(bluff=True)
+        game.process_decisions(
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            hand_nb=hand_nb,
+        )
+        assert (
+            game.players.get(loosing_player_name).n_dices_left
+            == N_INIT_DICES_PER_PLAYER - 1
+        )
+        assert (
+            len(game.players.get(loosing_player_name).dices)
+            == N_INIT_DICES_PER_PLAYER - 1
+        )
+
     @pytest.mark.parametrize(
         "players, dices, right_player_name, right_player_decision, hand_nb, all_dices_details, decision_code",
         [
@@ -37,7 +131,7 @@ class TestGame:
                 Decision(Raise(n_dices=13, dice_face="6")),
                 2,
                 {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
-                "2.1",
+                "2.2",
             ),
             (
                 [Player(name="Marc"), Player("Jean"), Player("Luc"), Player("Arthur")],
@@ -51,7 +145,7 @@ class TestGame:
                 Decision(Raise(n_dices=9, dice_face="6")),
                 3,
                 {"2": 4, PACO: 11, "5": 2, "3": 2, "6": 1},
-                "2.2",
+                "2.1",
             ),
         ],
     )
