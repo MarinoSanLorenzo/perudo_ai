@@ -5,3 +5,5 @@ run_git_pipeline.bat
 mypy.ini
 .mypy_cache
 .gitignore
+.coverage
+/htmlcov

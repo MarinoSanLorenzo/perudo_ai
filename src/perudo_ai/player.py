@@ -39,7 +39,9 @@ class Player:
     def n_dices_left(self, n_dices: int) -> None:
         if not (isinstance(n_dices, int) and n_dices >= 0):
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
-        self._dices: List[str] = random.choices(POSSIBLE_VALUES, k=n_dices)
+        self._dices: List[str] = random.choices(
+            POSSIBLE_VALUES, k=n_dices
+        )  # be careful player who looses dices shuffled it twice, not so much important at this stage
         self._n_dices_left = n_dices
 
     def shuffle_dices(self) -> None:

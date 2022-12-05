@@ -15,14 +15,46 @@ def three_players() -> List[Player]:
 
 
 class TestGame:
+    @pytest.mark.skip(reason="Not yet implemented")
+    def test_run_game(self) -> None:
+        game = Game()
+        game.run()
+        while not (game.is_game_finished):
+            if game.round == 0 and game.hand_nb == 0:
+                right_player = random.choice(list(game.players.values()))
+            elif game.hand_nb == 0 and game.round != 0:
+                looser_from_previous_round = game.history.get(game.round - 1).get(
+                    "looser"
+                )
+                right_player = game.players.get(looser_from_previous_round)
+            else:
+                right_player = left_player
+            left_player = right_player.left_player
+            game.process_decisions(
+                (right_player, right_player.take_optimal_decision()),
+                (left_player, left_player.take_optimal_decision()),
+            )
+
+    @pytest.mark.parametrize("hand_nb, is_error", [(-1, True), (2, False), (0, False)])
+    def test_set_nb_hands(
+        self, three_players: List[Player], hand_nb: int, is_error: bool
+    ) -> None:
+        game = Game(three_players)
+        if is_error:
+            with pytest.raises(InvalidGameInput) as e:
+                game.hand_nb = hand_nb
+        else:
+            game.hand_nb = hand_nb
+            assert game.hand_nb == hand_nb
+
     def test_right_player_can_not_call_bluff_when_first_hand(self) -> None:
         game = Game()
+        game.hand_nb = 0
         right_player = random.choice(list(game.players.values()))
         with pytest.raises(InvalidGameInput) as e:
             game.process_decisions(
                 (right_player, Decision(bluff=True)),
                 (right_player.left_player, Decision(Raise("5", 2))),
-                1,
             )
 
         assert "bluff" in str(e.value)
@@ -84,15 +116,14 @@ class TestGame:
         loosing_player_name: str,
     ) -> None:
         game = Game(players=players)
+        game.hand_nb = hand_nb
         for player, dice in zip(game.players.values(), dices):
             player._dices = dice
         right_player = game.players.get(right_player_name)
         left_player = right_player.left_player
         left_player_decision = Decision(bluff=True)
         game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb=hand_nb,
+            (right_player, right_player_decision), (left_player, left_player_decision)
         )
         assert (
             game.players.get(loosing_player_name).n_dices_left
@@ -160,6 +191,7 @@ class TestGame:
         decision_code: str,
     ) -> None:
         game = Game(players=players)
+        game.hand_nb = hand_nb
         for player, dice in zip(game.players.values(), dices):
             player._dices = dice
         right_player = game.players.get(right_player_name)
@@ -167,9 +199,7 @@ class TestGame:
         left_player_decision = Decision(bluff=True)
 
         decision_details = game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb,
+            (right_player, right_player_decision), (left_player, left_player_decision)
         )
         # assert decision_details.get('decision_outcome') == f'Player {right_player_name} won.\nPlayer {left_player.name} lost.'
         # assert decision_details.get('nb_dices_raised_on') == ''
@@ -239,69 +269,6 @@ class TestGame:
                     dices_details_actual[player_name][dice_face] == nb_dice
                 ), f"player_name={player_name}, dices_details_expected={dice_details} vs  dices_details_expected={dices_details_expected} | [{nb_dice}x{dice_face}]"
 
-    @pytest.mark.skip("reason not implemented yet")
-    @pytest.mark.parametrize(
-        "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
-        [
-            (
-                [Player("Marc"), Player("Luc")],
-                "Marc",
-                "Luc",
-                Decision(Raise(9, "3")),
-                Decision(bluff=True),
-                1,
-                N_INIT_DICES_PER_PLAYER,
-            ),
-            (
-                [Player("Marc"), Player("Luc"), Player("Louis")],
-                "Marc",
-                "Louis",
-                Decision(Raise(14, "4")),
-                Decision(bluff=True),
-                2,
-                N_INIT_DICES_PER_PLAYER,
-            ),
-            (
-                [Player("Marc"), Player("Luc"), Player("Louis")],
-                "Marc",
-                "Louis",
-                Decision(Raise(3, "5")),
-                Decision(bluff=True),
-                3,
-                N_INIT_DICES_PER_PLAYER,
-            ),
-            (
-                [Player("Marc"), Player("Luc"), Player("Louis")],
-                "Marc",
-                "Louis",
-                Decision(Raise(29, "6")),
-                Decision(bluff=True),
-                0,
-                N_INIT_DICES_PER_PLAYER * 2,
-            ),
-        ],
-    )
-    def test_process_decisions_left_player_call_bluff(
-        self,
-        players: List[Player],
-        right_player_name: str,
-        left_player_name: str,
-        right_player_decision: Decision,
-        left_player_decision: Decision,
-        hand_nb: int,
-        n_init_dices: int,
-    ) -> None:
-        game = Game(players=players, n_init_dices=n_init_dices)
-        right_player, left_player = game.players.get(
-            right_player_name
-        ), game.players.get(left_player_name)
-
-        decision_details = game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb,
-        )
-
     @pytest.mark.parametrize(
         "players, right_player_name, left_player_name, right_player_decision, left_player_decision, hand_nb, n_init_dices",
         [
@@ -363,6 +330,7 @@ class TestGame:
         n_init_dices: int,
     ) -> None:
         game = Game(players=players, n_init_dices=n_init_dices)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
@@ -371,7 +339,6 @@ class TestGame:
             decision_details = game.process_decisions(
                 (right_player, right_player_decision),
                 (left_player, left_player_decision),
-                hand_nb,
             )
         assert (
             "1.3.1.1" in str(e.value)
@@ -431,14 +398,13 @@ class TestGame:
         n_init_dices: int,
     ) -> None:
         game = Game(players=players, n_init_dices=n_init_dices)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
 
         decision_details = game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb,
+            (right_player, right_player_decision), (left_player, left_player_decision)
         )
         assert (
             decision_details.get("decision_outcome")
@@ -497,6 +463,7 @@ class TestGame:
         n_init_dices: int,
     ) -> None:
         game = Game(players=players, n_init_dices=n_init_dices)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
@@ -504,7 +471,6 @@ class TestGame:
             decisions_outcome = game.process_decisions(
                 (right_player, right_player_decision),
                 (left_player, left_player_decision),
-                hand_nb,
             )
         assert GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES in str(
             e.value
@@ -587,14 +553,13 @@ class TestGame:
         n_init_dices: int,
     ) -> None:
         game = Game(players=players, n_init_dices=n_init_dices)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
 
         decisions_outcome = game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb,
+            (right_player, right_player_decision), (left_player, left_player_decision)
         )
 
     @pytest.mark.parametrize(
@@ -649,6 +614,7 @@ class TestGame:
         n_init_dices: int,
     ) -> None:
         game = Game(players=players, n_init_dices=n_init_dices)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
@@ -656,7 +622,6 @@ class TestGame:
             decisions_outcome = game.process_decisions(
                 (right_player, right_player_decision),
                 (left_player, left_player_decision),
-                hand_nb,
             )
         assert GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT in str(e.value)
 
@@ -691,6 +656,7 @@ class TestGame:
         hand_nb: int,
     ) -> None:
         game = Game(players=players)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
@@ -698,7 +664,6 @@ class TestGame:
             decisions_outcome = game.process_decisions(
                 (right_player, right_player_decision),
                 (left_player, left_player_decision),
-                hand_nb,
             )
         assert GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND in str(e.value)
 
@@ -732,13 +697,12 @@ class TestGame:
 
         hand_nb = 0
         game = Game(players=players)
+        game.hand_nb = hand_nb
         right_player, left_player = game.players.get(
             right_player_name
         ), game.players.get(left_player_name)
         decisions_outcome = game.process_decisions(
-            (right_player, right_player_decision),
-            (left_player, left_player_decision),
-            hand_nb,
+            (right_player, right_player_decision), (left_player, left_player_decision)
         )
         assert isinstance(decisions_outcome, dict)
         assert decisions_outcome.get("right_player_decision") == right_player_decision
