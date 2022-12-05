@@ -25,7 +25,8 @@ class Game:
     ) -> None:
         self.n_init_dices = n_init_dices
         self.players = players
-        self._round = 1
+        self.round = 0
+        self.hand_nb = 0
         players_lst = list(self.players.values())
         for i, player in enumerate(
             players_lst
@@ -34,7 +35,8 @@ class Game:
             player.n_dices_left = n_init_dices
         self.n_max_dices: int = len(players_lst) * n_init_dices
         self._rounds_history: Dict[str, Any] = {}
-        is_game_finished = False
+        self.is_round_finished = False
+        self.is_game_finished = False
         """
         {'round 1':{'decisions_given':[{'player_1_name':Decision1}, {'player_2_name:Decision2}, ....],
                     'decisions_received':[{'player_2_name:Decision1}, {'player_3_name:Decision2},....],
@@ -115,15 +117,14 @@ class Game:
         else:
             raise InvalidGameInput(n_round, GameErrorMessage.INVALID_GAME_TYPE)
 
-    def start_round(self):  # TODO
-        if self.round == 1:
-            player_to_play = random.choice(self.players.values())
+    # def start_round(self):  # TODO
+    #     if self.round == 1:
+    #         player_to_play = random.choice(self.players.values())
 
     def process_decisions(
         self,
         right_player_decision_pair: Tuple[Player, Decision],
         left_player_decision_pair: Tuple[Player, Decision],
-        hand_nb: int,
     ) -> Dict[str, Any]:
         left_player, left_player_decision = left_player_decision_pair  # right
         right_player, right_player_decision = right_player_decision_pair  # start
@@ -131,19 +132,22 @@ class Game:
         is_round_finished = False
         dices_details_per_player = None
         all_dices_details = None
-        first_play = hand_nb == 0
+        first_play = self.hand_nb == 0
+        hand_nb = self.hand_nb
         decision_outcome = None
         decision_code = None
         nb_dices_bet_on_and_present_in_game = None
 
         if (
             first_play
-            and (right_player_decision.raise_.dice_face == PACO)
+            and (right_player_decision.raise_)
             and (right_player.n_dices_left > 1)
         ):
-            raise InvalidGameInput(
-                right_player.n_dices_left, GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND
-            )
+            if right_player_decision.raise_.dice_face == PACO:
+                raise InvalidGameInput(
+                    right_player.n_dices_left,
+                    GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND,
+                )
         if right_player_decision.bluff:
             raise InvalidGameInput("Can not call bluff at the beginning of the hand.")
         if right_player_decision.raise_.n_dices > self.total_nb_dices:
@@ -171,6 +175,7 @@ class Game:
                         f"{left_player.left_player.name} to talk",
                         "1.1.1",
                     )
+                    self.hand_nb += 1  # TODO:test
                 else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
                     raise InvalidGameInput(
                         f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
@@ -190,6 +195,7 @@ class Game:
                             f"{left_player.left_player.name} to talk",
                             "1.2.1.1",
                         )
+                        self.hand_nb += 1
                     elif (
                         left_player_decision.raise_.dice_face != PACO
                     ):  # 1.2.1.2 left player played higher number of dices but not PACOS
@@ -200,6 +206,7 @@ class Game:
                                 f"{left_player.left_player.name} to talk",
                                 "1.2.1.2.1",
                             )
+                            self.hand_nb += 1
                         elif left_player_decision.raise_.n_dices < (
                             right_player_decision.raise_.n_dices * 2 + 1
                         ):  # 1.2.1.2.2 Left player did not say more than twice +1
@@ -221,6 +228,7 @@ class Game:
                         f"{left_player.left_player.name} to talk",
                         "1.2.2",
                     )
+                    self.hand_nb
                 else:
                     raise NotImplementedError("1.2.3")
             elif (
@@ -260,11 +268,12 @@ class Game:
                     elif (
                         left_player_decision.raise_.n_dices
                         >= half_nb_dices_pacos_needed
-                    ):  # 1.3.2.1 left player played with pacos but and raise enough
+                    ):  # 1.3.2.1 left player played with pacos  and raise enough
                         decision_outcome, decision_code = (
                             f"{left_player.left_player.name} to talk",
                             "1.3.2.1",
                         )
+                        self.hand_nb += 1
                     else:  # 1.3.2.2
                         raise NotImplementedError("1.3.2.2")
                 else:  # 1.3.3
@@ -361,6 +370,19 @@ class Game:
             for dice_face, nb_dices in dices_details.items():
                 all_dices_details[dice_face] += nb_dices
         return all_dices_details
+
+    @property
+    def hand_nb(self) -> int:
+        return self._hand_nb
+
+    @hand_nb.setter
+    def hand_nb(self, hand: int) -> int:
+        if not (isinstance(hand, int) and hand >= 0):
+            raise InvalidGameInput(hand)
+        self._hand_nb = hand
+
+    def move_to_next_round(self) -> None:
+        self.round = None
 
     def save_round_info_to_history(self):
         pass
