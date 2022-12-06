@@ -12,8 +12,6 @@ __all__ = [
     "Game",
 ]
 
-infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
-
 
 class Round:
     pass
@@ -36,7 +34,7 @@ class Game:
             player.left_player = players_lst[i - 1]
             player.n_dices_left = n_init_dices
         self.n_max_dices: int = len(players_lst) * n_init_dices
-        self._rounds_history: Dict[str, Any] = infinite_defaultdict()
+        self._rounds_history: Dict[str, Any] = defaultdict(lambda: defaultdict(list))
         self._decision_outcome_details = {}
         self.is_round_finished = False
         self.is_game_finished = False
@@ -339,8 +337,9 @@ class Game:
             "winner": winner,
             "looser": looser,
         }
+        # add self.hand_nb +=1
         self._decision_outcome_details = decision_outcome_details
-        # self.save_round_info_to_history()
+        self.save_round_info_to_history()
         return decision_outcome_details
 
     @property
@@ -401,7 +400,7 @@ class Game:
     def move_to_next_round(self) -> None:
         self.round = None
 
-    def save_round_info_to_history(self) -> None:
+    def save_round_info_to_history(self) -> None:  # TODO: testing
         decision_outcome_details: Dict[str, Any] = self._decision_outcome_details
         right_player_decision = decision_outcome_details.get("right_player_decision")
         left_player_decision = decision_outcome_details.get("left_player_decision")
