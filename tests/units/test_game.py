@@ -15,6 +15,9 @@ def three_players() -> List[Player]:
 
 
 class TestGame:
+    def test_game_save_history(self) -> None:
+        pass
+
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:
         game = Game()
@@ -23,9 +26,9 @@ class TestGame:
             if game.round == 0 and game.hand_nb == 0:
                 right_player = random.choice(list(game.players.values()))
             elif game.hand_nb == 0 and game.round != 0:
-                looser_from_previous_round = game.history.get(game.round - 1).get(
-                    "looser"
-                )
+                looser_from_previous_round = game._rounds_history.get(
+                    game.round - 1
+                ).get("looser")
                 right_player = game.players.get(looser_from_previous_round)
             else:
                 right_player = left_player
@@ -122,6 +125,7 @@ class TestGame:
         right_player = game.players.get(right_player_name)
         left_player = right_player.left_player
         left_player_decision = Decision(bluff=True)
+        assert game.is_round_finished == False
         game.process_decisions(
             (right_player, right_player_decision), (left_player, left_player_decision)
         )
@@ -133,6 +137,7 @@ class TestGame:
             len(game.players.get(loosing_player_name).dices)
             == N_INIT_DICES_PER_PLAYER - 1
         )
+        assert game.is_round_finished == True
 
     @pytest.mark.parametrize(
         "players, dices, right_player_name, right_player_decision, hand_nb, all_dices_details, decision_code",

@@ -12,6 +12,8 @@ __all__ = [
     "Game",
 ]
 
+infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
+
 
 class Round:
     pass
@@ -34,7 +36,8 @@ class Game:
             player.left_player = players_lst[i - 1]
             player.n_dices_left = n_init_dices
         self.n_max_dices: int = len(players_lst) * n_init_dices
-        self._rounds_history: Dict[str, Any] = {}
+        self._rounds_history: Dict[str, Any] = infinite_defaultdict()
+        self._decision_outcome_details = {}
         self.is_round_finished = False
         self.is_game_finished = False
         """
@@ -117,10 +120,6 @@ class Game:
         else:
             raise InvalidGameInput(n_round, GameErrorMessage.INVALID_GAME_TYPE)
 
-    # def start_round(self):  # TODO
-    #     if self.round == 1:
-    #         player_to_play = random.choice(self.players.values())
-
     def process_decisions(
         self,
         right_player_decision_pair: Tuple[Player, Decision],
@@ -137,6 +136,7 @@ class Game:
         decision_outcome = None
         decision_code = None
         nb_dices_bet_on_and_present_in_game = None
+        winner, looser = None, None
 
         if (
             first_play
@@ -284,7 +284,7 @@ class Game:
             left_player_decision.bluff is True
         ):  # 2. Left player calls bluff on right player
             all_dices_details = self.get_all_dices_details()
-            is_round_finished = True
+            self.is_round_finished = True
             dices_details_per_player = self.get_dices_details_per_player()
             nb_dices_bet_on_and_present_in_game = (
                 all_dices_details.get(right_player_decision.raise_.dice_face, 0)
@@ -300,8 +300,9 @@ class Game:
                     f"Right Player:\t{right_player_name} won.\nLeft Player:\t{left_player_name} lost.",
                     "2.1",
                 )
-                left_player.take_one_dice_out()  # TODO:TEST
-                is_round_finished = True
+                left_player.take_one_dice_out()
+                winner, looser = right_player_name, left_player_name
+
             elif (
                 right_player_decision.raise_.n_dices
                 > nb_dices_bet_on_and_present_in_game
@@ -311,7 +312,7 @@ class Game:
                     "2.2",
                 )
                 right_player.take_one_dice_out()
-                is_round_finished = True
+                winner, looser = left_player_name, right_player_name
             else:  # 2.3
                 raise NotImplementedError("2.3")
         elif (
@@ -322,7 +323,7 @@ class Game:
         else:  # 4. not raising, nor bluffing nor equalling, do not know what it is
             raise NotImplementedError("4")
 
-        return {
+        decision_outcome_details = {
             "right_player_decision": right_player_decision,
             "left_player_decision": left_player_decision,
             "right_player_name": right_player_name,
@@ -334,7 +335,13 @@ class Game:
             "all_dices_details": all_dices_details,
             "decision_code": decision_code,
             "nb_dices_bet_on_and_present_in_game": nb_dices_bet_on_and_present_in_game,
+            "is_round_finished": self.is_round_finished,
+            "winner": winner,
+            "looser": looser,
         }
+        self._decision_outcome_details = decision_outcome_details
+        # self.save_round_info_to_history()
+        return decision_outcome_details
 
     @property
     def n_max_dices(self) -> int:
@@ -376,13 +383,74 @@ class Game:
         return self._hand_nb
 
     @hand_nb.setter
-    def hand_nb(self, hand: int) -> int:
+    def hand_nb(self, hand: int) -> None:
         if not (isinstance(hand, int) and hand >= 0):
             raise InvalidGameInput(hand)
         self._hand_nb = hand
 
+    @property
+    def is_round_finished(self) -> bool:
+        return self._is_round_finished
+
+    @is_round_finished.setter
+    def is_round_finished(self, is_finished: bool) -> None:
+        if not (isinstance(is_finished, bool)):
+            raise InvalidGameInput(is_finished)
+        self._is_round_finished = is_finished
+
     def move_to_next_round(self) -> None:
         self.round = None
 
-    def save_round_info_to_history(self):
-        pass
+    def save_round_info_to_history(self) -> None:
+        decision_outcome_details: Dict[str, Any] = self._decision_outcome_details
+        right_player_decision = decision_outcome_details.get("right_player_decision")
+        left_player_decision = decision_outcome_details.get("left_player_decision")
+        right_player_name = decision_outcome_details.get("right_player_name")
+        left_player_name = decision_outcome_details.get("left_player_name")
+        decision_outcome = decision_outcome_details.get("decision_outcome")
+        winner = decision_outcome_details.get("winner")
+        looser = decision_outcome_details.get("looser")
+
+        self._rounds_history[self.round]["right_player_decision_by_name"].append(
+            {right_player_name: right_player_decision}
+        )
+        self._rounds_history[self.round]["left_player_decision_by_name"].append(
+            {left_player_name: left_player_decision}
+        )
+        self._rounds_history[self.round]["decision_pairs"].append(
+            {
+                "right_player_name": right_player_name,
+                "left_player_name": left_player_name,
+                "right_player_decision": right_player_decision,
+                "left_player_decision": left_player_decision,
+            }
+        )
+        self._rounds_history[self.round]["decision_outcome"].append(decision_outcome)
+        self._rounds_history[self.round]["is_round_finished"].append(
+            self.is_round_finished
+        )
+        self._rounds_history[self.round]["hand_nb"].append(self.hand_nb)
+        self._rounds_history[self.round][
+            "dices_details_per_player"
+        ] = self.get_dices_details_per_player()
+        self._rounds_history[self.round][
+            "all_dices_details"
+        ] = self.get_all_dices_details()
+        self._rounds_history[self.round]["winner"] = winner
+        self._rounds_history[self.round]["looser"] = looser
+        self._rounds_history[self.round][
+            "nb_total_dices_at_beginning_round"
+        ] = self._rounds_history[self.round - 1]["nb_total_dices_at_end_round"]
+        self._rounds_history[self.round]["nb_total_dices_at_end_round"] = sum(
+            list(self.get_all_dices_details().values())
+        )
+        self._rounds_history[self.round][
+            "n_dices_per_player_at_beginning_round"
+        ] = self._rounds_history[self.round - 1]["n_dices_per_player_at_end_round"]
+        self._rounds_history[self.round]["n_dices_per_player_at_end_round"] = {
+            player.name: player.n_dices_left for player in self.players.values()
+        }
+        self._rounds_history[self.round][
+            "n_players_at_beginning_round"
+        ] = self._rounds_history[self.round - 1]["n_players_at_end_round"]
+        self._rounds_history[self.round]["n_players_at_end_round"] = len(self.players)
