@@ -15,8 +15,12 @@ def three_players() -> List[Player]:
 
 
 class TestGame:
-    def test_game_save_history(self) -> None:
-        pass
+    def test_game_save_history(self, three_players: List[Player]) -> None:
+        game = Game(three_players)
+        assert game.is_game_finished == False
+        assert game.round == 0
+        assert game.hand_nb == 0
+        right_player = random.choice(list(game.players.values()))
 
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:
