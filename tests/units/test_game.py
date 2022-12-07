@@ -16,11 +16,106 @@ def three_players() -> List[Player]:
 
 class TestGame:
     def test_game_save_history(self, three_players: List[Player]) -> None:
+        dices_lst = [
+            ["2", "2", PACO, PACO, "5"],
+            ["3", "3", PACO, PACO, "6"],
+            ["2", "2", PACO, PACO, "5"],
+        ]
+
         game = Game(three_players)
+        for player, dices in zip(game.players.values(), dices_lst):
+            player._dices = dices
+        round, hand_nb = 0, 0
         assert game.is_game_finished == False
-        assert game.round == 0
-        assert game.hand_nb == 0
+        assert game.round == round
+        assert game.hand_nb == hand_nb
+        assert not game._rounds_history
         right_player = random.choice(list(game.players.values()))
+        left_player = right_player.left_player
+        right_player_decision = Decision(Raise(n_dices=10, dice_face="2"))
+        left_player_decision = Decision(bluff=True)
+        game.process_decisions(
+            (right_player, right_player_decision), (left_player, left_player_decision)
+        )
+        assert game._rounds_history[round]["right_player_decision_by_name"] == [
+            {right_player.name: right_player_decision}
+        ]
+        assert game._rounds_history[round]["left_player_decision_by_name"] == [
+            {left_player.name: left_player_decision}
+        ]
+        assert game._rounds_history[round]["decision_pairs"] == [
+            {
+                "right_player_name": right_player.name,
+                "left_player_name": left_player.name,
+                "right_player_decision": right_player_decision,
+                "left_player_decision": left_player_decision,
+            }
+        ]
+        assert game._rounds_history[round]["decision_outcome"] == [
+            game._decision_outcome_details.get("decision_outcome")
+        ]
+        assert game._rounds_history[round]["is_round_finished"] == [
+            game._decision_outcome_details.get("is_round_finished")
+        ]
+        assert game._rounds_history[round]["hand_nb"] == [
+            game._decision_outcome_details.get("hand_nb")
+        ]
+        assert game._rounds_history[round][
+            "dices_details_per_player"
+        ] == game._decision_outcome_details.get("dices_details_per_player")
+        assert (
+            game._rounds_history[round]["all_dices_details"]
+            == game._decision_outcome_details.get("all_dices_details")
+            == {PACO: 6, "2": 4, "3": 2, "5": 2, "6": 1}
+        )
+        assert (
+            game._rounds_history[round]["winner"]
+            == game._decision_outcome_details.get("winner")
+            == right_player.name
+        )
+        looser = left_player.name
+        assert (
+            game._rounds_history[round]["looser"]
+            == game._decision_outcome_details.get("looser")
+            == looser
+        )
+        assert (
+            game._rounds_history[round]["nb_total_dices_at_beginning_round"]
+            == game._decision_outcome_details.get("nb_total_dices_at_beginning_round")
+            == 3 * N_INIT_DICES_PER_PLAYER
+        )
+        assert (
+            game._rounds_history[round]["nb_total_dices_at_end_round"]
+            == game._decision_outcome_details.get("nb_total_dices_at_end_round")
+            == 3 * N_INIT_DICES_PER_PLAYER - 1
+        )
+        n_dices_per_player_at_beginning_round = {
+            player.name: N_INIT_DICES_PER_PLAYER for player in game.players.values()
+        }
+        assert (
+            game._rounds_history[round]["n_dices_per_player_at_beginning_round"]
+            == game._decision_outcome_details.get(
+                "n_dices_per_player_at_beginning_round"
+            )
+            == n_dices_per_player_at_beginning_round
+        )
+        n_dices_per_player_at_beginning_round[looser] -= 1
+        n_dices_per_player_at_end_round = n_dices_per_player_at_beginning_round
+        assert (
+            game._rounds_history[round]["n_dices_per_player_at_end_round"]
+            == game._decision_outcome_details.get("n_dices_per_player_at_end_round")
+            == n_dices_per_player_at_end_round
+        )
+        assert (
+            game._rounds_history[round]["n_players_at_beginning_round"]
+            == game._decision_outcome_details.get("n_players_at_beginning_round")
+            == 3
+        )
+        assert (
+            game._rounds_history[round]["n_players_at_end_round"]
+            == game._decision_outcome_details.get("n_players_at_end_round")
+            == 3
+        )
 
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:

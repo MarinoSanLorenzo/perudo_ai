@@ -127,8 +127,16 @@ class Game:
         right_player, right_player_decision = right_player_decision_pair  # start
         right_player_name, left_player_name = right_player.name, left_player.name
         is_round_finished = False
-        dices_details_per_player = None
-        all_dices_details = None
+        dices_details_per_player = self.get_dices_details_per_player()
+        all_dices_details = self.get_all_dices_details()
+        nb_total_dices_at_beginning_round = sum(
+            list(self.get_all_dices_details().values())
+        )
+        n_dices_per_player_at_beginning_round = {
+            player.name: player.n_dices_left for player in self.players.values()
+        }
+        n_players_at_beginning_round = len(self.players)
+
         first_play = self.hand_nb == 0
         hand_nb = self.hand_nb
         decision_outcome = None
@@ -327,15 +335,24 @@ class Game:
             "right_player_name": right_player_name,
             "left_player_name": left_player_name,
             "decision_outcome": decision_outcome,
-            "is_round_finished": is_round_finished,
+            "is_round_finished": self.is_round_finished,
             "hand_nb": hand_nb,
             "dices_details_per_player": dices_details_per_player,
             "all_dices_details": all_dices_details,
-            "decision_code": decision_code,
-            "nb_dices_bet_on_and_present_in_game": nb_dices_bet_on_and_present_in_game,
-            "is_round_finished": self.is_round_finished,
             "winner": winner,
             "looser": looser,
+            "nb_total_dices_at_beginning_round": nb_total_dices_at_beginning_round,
+            "nb_total_dices_at_end_round": sum(
+                list(self.get_all_dices_details().values())
+            ),
+            "n_dices_per_player_at_beginning_round": n_dices_per_player_at_beginning_round,
+            "n_dices_per_player_at_end_round": {
+                player.name: player.n_dices_left for player in self.players.values()
+            },
+            "n_players_at_beginning_round": n_players_at_beginning_round,
+            "n_players_at_end_round": len(self.players),
+            "decision_code": decision_code,
+            "nb_dices_bet_on_and_present_in_game": nb_dices_bet_on_and_present_in_game,
         }
         # add self.hand_nb +=1
         self._decision_outcome_details = decision_outcome_details
@@ -407,8 +424,29 @@ class Game:
         right_player_name = decision_outcome_details.get("right_player_name")
         left_player_name = decision_outcome_details.get("left_player_name")
         decision_outcome = decision_outcome_details.get("decision_outcome")
+        hand_nb = decision_outcome_details.get("hand_nb")
+        dices_details_per_player = decision_outcome_details.get(
+            "dices_details_per_player"
+        )
+        all_dices_details = decision_outcome_details.get("all_dices_details")
         winner = decision_outcome_details.get("winner")
         looser = decision_outcome_details.get("looser")
+        nb_total_dices_at_beginning_round = decision_outcome_details.get(
+            "nb_total_dices_at_beginning_round"
+        )
+        nb_total_dices_at_end_round = decision_outcome_details.get(
+            "nb_total_dices_at_end_round"
+        )
+        n_dices_per_player_at_beginning_round = decision_outcome_details.get(
+            "n_dices_per_player_at_beginning_round"
+        )
+        n_dices_per_player_at_end_round = decision_outcome_details.get(
+            "n_dices_per_player_at_end_round"
+        )
+        n_players_at_beginning_round = decision_outcome_details.get(
+            "n_players_at_beginning_round"
+        )
+        n_players_at_end_round = decision_outcome_details.get("n_players_at_end_round")
 
         self._rounds_history[self.round]["right_player_decision_by_name"].append(
             {right_player_name: right_player_decision}
@@ -428,28 +466,28 @@ class Game:
         self._rounds_history[self.round]["is_round_finished"].append(
             self.is_round_finished
         )
-        self._rounds_history[self.round]["hand_nb"].append(self.hand_nb)
+        self._rounds_history[self.round]["hand_nb"].append(hand_nb)
         self._rounds_history[self.round][
             "dices_details_per_player"
-        ] = self.get_dices_details_per_player()
-        self._rounds_history[self.round][
-            "all_dices_details"
-        ] = self.get_all_dices_details()
+        ] = dices_details_per_player
+        self._rounds_history[self.round]["all_dices_details"] = all_dices_details
         self._rounds_history[self.round]["winner"] = winner
         self._rounds_history[self.round]["looser"] = looser
         self._rounds_history[self.round][
             "nb_total_dices_at_beginning_round"
-        ] = self._rounds_history[self.round - 1]["nb_total_dices_at_end_round"]
-        self._rounds_history[self.round]["nb_total_dices_at_end_round"] = sum(
-            list(self.get_all_dices_details().values())
-        )
+        ] = nb_total_dices_at_beginning_round
+        self._rounds_history[self.round][
+            "nb_total_dices_at_end_round"
+        ] = nb_total_dices_at_end_round
         self._rounds_history[self.round][
             "n_dices_per_player_at_beginning_round"
-        ] = self._rounds_history[self.round - 1]["n_dices_per_player_at_end_round"]
-        self._rounds_history[self.round]["n_dices_per_player_at_end_round"] = {
-            player.name: player.n_dices_left for player in self.players.values()
-        }
+        ] = n_dices_per_player_at_beginning_round
+        self._rounds_history[self.round][
+            "n_dices_per_player_at_end_round"
+        ] = n_dices_per_player_at_end_round
         self._rounds_history[self.round][
             "n_players_at_beginning_round"
-        ] = self._rounds_history[self.round - 1]["n_players_at_end_round"]
-        self._rounds_history[self.round]["n_players_at_end_round"] = len(self.players)
+        ] = n_players_at_beginning_round
+        self._rounds_history[self.round][
+            "n_players_at_end_round"
+        ] = n_players_at_beginning_round
