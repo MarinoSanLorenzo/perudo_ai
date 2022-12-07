@@ -27,13 +27,8 @@ class Game:
         self.players = players
         self.round = 0
         self.hand_nb = 0
-        players_lst = list(self.players.values())
-        for i, player in enumerate(
-            players_lst
-        ):  # game attributes a left player to all players and also the same number of dices
-            player.left_player = players_lst[i - 1]
-            player.n_dices_left = n_init_dices
-        self.n_max_dices: int = len(players_lst) * n_init_dices
+        self.allocate_left_players_to_right_players(allocate_same_number_of_dices=True)
+        self.n_max_dices: int = len(list(self.players.values())) * n_init_dices
         self._rounds_history: Dict[str, Any] = defaultdict(lambda: defaultdict(list))
         self._decision_outcome_details = {}
         self.is_round_finished = False
@@ -126,7 +121,7 @@ class Game:
         left_player, left_player_decision = left_player_decision_pair  # right
         right_player, right_player_decision = right_player_decision_pair  # start
         right_player_name, left_player_name = right_player.name, left_player.name
-        is_round_finished = False
+        self.is_round_finished = False
         dices_details_per_player = self.get_dices_details_per_player()
         all_dices_details = self.get_all_dices_details()
         nb_total_dices_at_beginning_round = sum(
@@ -234,7 +229,7 @@ class Game:
                         f"{left_player.left_player.name} to talk",
                         "1.2.2",
                     )
-                    self.hand_nb
+                    self.hand_nb += 1
                 else:
                     raise NotImplementedError("1.2.3")
             elif (
@@ -290,7 +285,6 @@ class Game:
             left_player_decision.bluff is True
         ):  # 2. Left player calls bluff on right player
             all_dices_details = self.get_all_dices_details()
-            self.is_round_finished = True
             dices_details_per_player = self.get_dices_details_per_player()
             nb_dices_bet_on_and_present_in_game = (
                 all_dices_details.get(right_player_decision.raise_.dice_face, 0)
@@ -308,6 +302,7 @@ class Game:
                 )
                 left_player.take_one_dice_out()
                 winner, looser = right_player_name, left_player_name
+                self.close_round()
 
             elif (
                 right_player_decision.raise_.n_dices
@@ -319,6 +314,7 @@ class Game:
                 )
                 right_player.take_one_dice_out()
                 winner, looser = left_player_name, right_player_name
+                self.close_round()
             else:  # 2.3
                 raise NotImplementedError("2.3")
         elif (
@@ -414,9 +410,6 @@ class Game:
             raise InvalidGameInput(is_finished)
         self._is_round_finished = is_finished
 
-    def move_to_next_round(self) -> None:
-        self.round = None
-
     def save_round_info_to_history(self) -> None:  # TODO: testing
         decision_outcome_details: Dict[str, Any] = self._decision_outcome_details
         right_player_decision = decision_outcome_details.get("right_player_decision")
@@ -491,3 +484,32 @@ class Game:
         self._rounds_history[self.round][
             "n_players_at_end_round"
         ] = n_players_at_beginning_round
+
+    def allocate_left_players_to_right_players(
+        self, allocate_same_number_of_dices: bool = False
+    ) -> None:
+        players_lst = list(self.players.values())
+        for i, player in enumerate(
+            players_lst
+        ):  # game attributes a left playeallocate_left_players_to_right_playersr to all players and also the same number of dices
+            player.left_player = players_lst[i - 1]
+            if allocate_same_number_of_dices:
+                player.n_dices_left = self._n_init_dices
+
+    def close_round(self) -> None:
+        # put hand_nb to 0
+        # check how many dices has the looser
+        # if 0 remove this player from the game
+        # reallocate the left player to the new circle of players
+        self.is_round_finished = True
+        self.hand_nb = 0
+        is_player_to_be_removed = False
+        for player in self.players.values():
+            if player.n_dices_left == 0:
+                is_player_to_be_removed = True
+                del self.players[player.name]
+        if is_player_to_be_removed:
+            self.allocate_left_players_to_right_players()
+
+        if len(self.players) == 1:
+            self.is_game_finished == True

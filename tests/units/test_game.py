@@ -14,7 +14,36 @@ def three_players() -> List[Player]:
     return [Player(name="Marc"), Player("Jean"), Player("Luc")]
 
 
+@pytest.fixture
+def dices_lst() -> List[List[str]]:
+    return [
+        ["2", "2", PACO, PACO, "5"],
+        ["3", "3", PACO, PACO, "6"],
+        ["2", "2", PACO, PACO, "5"],
+    ]
+
+
+@pytest.fixture
+def game(three_players: List[Player], dices_lst: List[List[str]]) -> Game:
+    game = Game(three_players)
+    for player, dices in zip(game.players.values(), dices_lst):
+        player._dices = dices
+    return game
+
+
 class TestGame:
+    def test_close_round(self, game: Game) -> None:
+        right_player = random.choice(list(game.players.values()))
+        left_player = right_player.left_player
+        right_player_decision = Decision(Raise(n_dices=10, dice_face="2"))
+        left_player_decision = Decision(bluff=True)
+        game.process_decisions(
+            (right_player, right_player_decision), (left_player, left_player_decision)
+        )
+        assert game.is_round_finished is True
+        assert game.hand_nb == 0
+        assert game.is_game_finished is False
+
     def test_game_save_history(self, three_players: List[Player]) -> None:
         dices_lst = [
             ["2", "2", PACO, PACO, "5"],
@@ -116,6 +145,8 @@ class TestGame:
             == game._decision_outcome_details.get("n_players_at_end_round")
             == 3
         )
+        right_player_decision = Decision(Raise(n_dices=10, dice_face="2"))
+        left_player_decision = Decision(bluff=True)
 
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:
