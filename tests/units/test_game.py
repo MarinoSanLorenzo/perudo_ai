@@ -43,6 +43,46 @@ def game(three_players: List[Player], dices_lst: List[List[str]]) -> Game:
 
 
 class TestGame:
+    @pytest.mark.skip(reason="Not yet implemented")
+    def test_run_game(self) -> None:
+        game = Game()
+        game.run()
+        while not (game.is_game_finished):
+            if game.round == 0 and game.hand_nb == 0:
+                right_player = random.choice(list(game.players.values()))
+            elif game.hand_nb == 0 and game.round != 0:
+                looser_from_previous_round = game._rounds_history.get(
+                    game.round - 1
+                ).get("looser")
+                right_player = game.players.get(looser_from_previous_round)
+            else:
+                right_player = left_player
+            left_player = right_player.left_player
+            game.process_decisions(
+                (right_player, right_player.take_optimal_decision()),
+                (left_player, left_player.take_optimal_decision()),
+            )
+
+    def test_close_round_loose_player(self):  # TODO:finist the logic
+        game = Game(players=3, n_init_dices=1)
+        right_player = random.choice(list(game.players.values()))
+        left_player = right_player.left_player
+        game.process_decisions(
+            (right_player, Decision(Raise(1, PACO))),
+            (left_player, Decision(Raise(3, "2"))),
+        )
+        right_player = left_player
+        left_player = right_player.left_player
+        game.process_decisions(
+            (right_player, Decision(Raise(3, "4"))),
+            (left_player, Decision(Raise(3, "5"))),
+        )
+        right_player = left_player
+        left_player = right_player.left_player
+        game.process_decisions(
+            (right_player, Decision(Raise(3, "6"))), (left_player, Decision(bluff=True))
+        )
+
     def test_close_round(self, game: Game) -> None:
         right_player = random.choice(list(game.players.values()))
         left_player = right_player.left_player
@@ -54,6 +94,10 @@ class TestGame:
         assert game.is_round_finished is True
         assert game.hand_nb == 0
         assert game.is_game_finished is False
+        assert (
+            game._rounds_history[0].get("dices_details_per_player")
+            != game.get_dices_details_per_player()
+        )
 
     def test_game_save_history(self, three_players: List[Player]) -> None:
         dices_lst = [
@@ -77,6 +121,9 @@ class TestGame:
         game.process_decisions(
             (right_player, right_player_decision), (left_player, left_player_decision)
         )
+        assert (
+            game._decision_outcome_details.get("round") == round == game.round - 1
+        )  # test close round
         assert game._rounds_history[round]["right_player_decision_by_name"] == [
             {right_player.name: right_player_decision}
         ]
@@ -156,28 +203,6 @@ class TestGame:
             == game._decision_outcome_details.get("n_players_at_end_round")
             == 3
         )
-        right_player_decision = Decision(Raise(n_dices=10, dice_face="2"))
-        left_player_decision = Decision(bluff=True)
-
-    @pytest.mark.skip(reason="Not yet implemented")
-    def test_run_game(self) -> None:
-        game = Game()
-        game.run()
-        while not (game.is_game_finished):
-            if game.round == 0 and game.hand_nb == 0:
-                right_player = random.choice(list(game.players.values()))
-            elif game.hand_nb == 0 and game.round != 0:
-                looser_from_previous_round = game._rounds_history.get(
-                    game.round - 1
-                ).get("looser")
-                right_player = game.players.get(looser_from_previous_round)
-            else:
-                right_player = left_player
-            left_player = right_player.left_player
-            game.process_decisions(
-                (right_player, right_player.take_optimal_decision()),
-                (left_player, left_player.take_optimal_decision()),
-            )
 
     @pytest.mark.parametrize("hand_nb, is_error", [(-1, True), (2, False), (0, False)])
     def test_set_nb_hands(

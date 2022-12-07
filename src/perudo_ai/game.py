@@ -122,6 +122,7 @@ class Game:
         right_player, right_player_decision = right_player_decision_pair  # start
         right_player_name, left_player_name = right_player.name, left_player.name
         self.is_round_finished = False
+        round = self.round
         dices_details_per_player = self.get_dices_details_per_player()
         all_dices_details = self.get_all_dices_details()
         nb_total_dices_at_beginning_round = sum(
@@ -326,6 +327,7 @@ class Game:
             raise NotImplementedError("4")
 
         decision_outcome_details = {
+            "round": round,
             "right_player_decision": right_player_decision,
             "left_player_decision": left_player_decision,
             "right_player_name": right_player_name,
@@ -412,6 +414,8 @@ class Game:
 
     def save_round_info_to_history(self) -> None:  # TODO: testing
         decision_outcome_details: Dict[str, Any] = self._decision_outcome_details
+
+        round = decision_outcome_details.get("round")
         right_player_decision = decision_outcome_details.get("right_player_decision")
         left_player_decision = decision_outcome_details.get("left_player_decision")
         right_player_name = decision_outcome_details.get("right_player_name")
@@ -441,13 +445,13 @@ class Game:
         )
         n_players_at_end_round = decision_outcome_details.get("n_players_at_end_round")
 
-        self._rounds_history[self.round]["right_player_decision_by_name"].append(
+        self._rounds_history[round]["right_player_decision_by_name"].append(
             {right_player_name: right_player_decision}
         )
-        self._rounds_history[self.round]["left_player_decision_by_name"].append(
+        self._rounds_history[round]["left_player_decision_by_name"].append(
             {left_player_name: left_player_decision}
         )
-        self._rounds_history[self.round]["decision_pairs"].append(
+        self._rounds_history[round]["decision_pairs"].append(
             {
                 "right_player_name": right_player_name,
                 "left_player_name": left_player_name,
@@ -455,33 +459,31 @@ class Game:
                 "left_player_decision": left_player_decision,
             }
         )
-        self._rounds_history[self.round]["decision_outcome"].append(decision_outcome)
-        self._rounds_history[self.round]["is_round_finished"].append(
-            self.is_round_finished
-        )
-        self._rounds_history[self.round]["hand_nb"].append(hand_nb)
-        self._rounds_history[self.round][
+        self._rounds_history[round]["decision_outcome"].append(decision_outcome)
+        self._rounds_history[round]["is_round_finished"].append(self.is_round_finished)
+        self._rounds_history[round]["hand_nb"].append(hand_nb)
+        self._rounds_history[round][
             "dices_details_per_player"
         ] = dices_details_per_player
-        self._rounds_history[self.round]["all_dices_details"] = all_dices_details
-        self._rounds_history[self.round]["winner"] = winner
-        self._rounds_history[self.round]["looser"] = looser
-        self._rounds_history[self.round][
+        self._rounds_history[round]["all_dices_details"] = all_dices_details
+        self._rounds_history[round]["winner"] = winner
+        self._rounds_history[round]["looser"] = looser
+        self._rounds_history[round][
             "nb_total_dices_at_beginning_round"
         ] = nb_total_dices_at_beginning_round
-        self._rounds_history[self.round][
+        self._rounds_history[round][
             "nb_total_dices_at_end_round"
         ] = nb_total_dices_at_end_round
-        self._rounds_history[self.round][
+        self._rounds_history[round][
             "n_dices_per_player_at_beginning_round"
         ] = n_dices_per_player_at_beginning_round
-        self._rounds_history[self.round][
+        self._rounds_history[round][
             "n_dices_per_player_at_end_round"
         ] = n_dices_per_player_at_end_round
-        self._rounds_history[self.round][
+        self._rounds_history[round][
             "n_players_at_beginning_round"
         ] = n_players_at_beginning_round
-        self._rounds_history[self.round][
+        self._rounds_history[round][
             "n_players_at_end_round"
         ] = n_players_at_beginning_round
 
@@ -503,15 +505,18 @@ class Game:
         # reallocate the left player to the new circle of players
         # shuffle all dices
         self.is_round_finished = True
+        self.round += 1
         self.hand_nb = 0
-        is_player_to_be_removed = False
+        player_to_be_removed = None
         for player in self.players.values():
             if player.n_dices_left == 0:
-                is_player_to_be_removed = True
-                del self.players[player.name]
-            else:
+                player_to_be_removed = (
+                    player.name
+                )  # avoir RuntimeError, dictionary changed size during iteration
+        if player_to_be_removed:
+            del self.players[player.name]
+            for player in self.players.values():
                 player.shuffle_dices()
-        if is_player_to_be_removed:
             self.allocate_left_players_to_right_players()
 
         if len(self.players) == 1:
