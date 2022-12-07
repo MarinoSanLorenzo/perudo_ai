@@ -501,6 +501,7 @@ class Game:
         # check how many dices has the looser
         # if 0 remove this player from the game
         # reallocate the left player to the new circle of players
+        # shuffle all dices
         self.is_round_finished = True
         self.hand_nb = 0
         is_player_to_be_removed = False
@@ -508,6 +509,8 @@ class Game:
             if player.n_dices_left == 0:
                 is_player_to_be_removed = True
                 del self.players[player.name]
+            else:
+                player.shuffle_dices()
         if is_player_to_be_removed:
             self.allocate_left_players_to_right_players()
 

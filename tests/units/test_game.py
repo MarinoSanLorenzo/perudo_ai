@@ -31,6 +31,17 @@ def game(three_players: List[Player], dices_lst: List[List[str]]) -> Game:
     return game
 
 
+# three_players =[Player(name="Marc"), Player("Jean"), Player("Luc")]
+# dices_lst = [
+#         ["2", "2", PACO, PACO, "5"],
+#         ["3", "3", PACO, PACO, "6"],
+#         ["2", "2", PACO, PACO, "5"],
+#     ]
+# game = Game(three_players)
+# for player, dices in zip(game.players.values(), dices_lst):
+#     player._dices = dices
+
+
 class TestGame:
     def test_close_round(self, game: Game) -> None:
         right_player = random.choice(list(game.players.values()))
