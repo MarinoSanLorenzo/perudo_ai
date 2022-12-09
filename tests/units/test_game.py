@@ -1,4 +1,3 @@
-import pytest
 from perudo_ai.game import Game
 from perudo_ai.custom_exceptions_and_errors import *
 from perudo_ai.player import Player
@@ -7,6 +6,8 @@ from typing import *
 from constants import *
 from collections import Counter
 import random
+from pprint import pprint
+import pytest
 
 
 @pytest.fixture
@@ -65,23 +66,58 @@ class TestGame:
 
     def test_close_round_loose_player(self):  # TODO:finist the logic
         game = Game(players=3, n_init_dices=1)
+        round, hand_nb = 0, 0
         right_player = random.choice(list(game.players.values()))
         left_player = right_player.left_player
+        dices_details_per_player_at_round_0 = game.get_dices_details_per_player()
         game.process_decisions(
             (right_player, Decision(Raise(1, PACO))),
             (left_player, Decision(Raise(3, "2"))),
         )
+        assert round in game._rounds_history
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+
+        hand_nb = 1
         right_player = left_player
         left_player = right_player.left_player
+        dices_details_per_player_at_round_0_hand_1 = game.get_dices_details_per_player()
         game.process_decisions(
             (right_player, Decision(Raise(3, "4"))),
             (left_player, Decision(Raise(3, "5"))),
         )
+
+        assert (
+            dices_details_per_player_at_round_0
+            == dices_details_per_player_at_round_0_hand_1
+        )  # checking that game does not shuffle dices between hands
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+
+        hand_nb = 2
         right_player = left_player
         left_player = right_player.left_player
-        game.process_decisions(
+        decision_details = game.process_decisions(
             (right_player, Decision(Raise(3, "6"))), (left_player, Decision(bluff=True))
         )
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+        assert len(game.players) == 2
+        dices_details_per_player_at_round_1 = game.get_dices_details_per_player()
+        assert (
+            dices_details_per_player_at_round_0 != dices_details_per_player_at_round_1
+        )
+        assert game._rounds_history[round]["n_players_at_beginning_round"] == 3
+        assert game._rounds_history[round]["n_players_at_end_round"] == 2
+        assert game._rounds_history[round]["nb_total_dices_at_beginning_round"] == 3
+        assert decision_details.get("nb_total_dices_at_end_round") == 2, pprint(
+            decision_details
+        )
+        assert (
+            game._rounds_history[round]["nb_total_dices_at_end_round"] == 2
+        ), f"{game.get_dices_details_per_player()} {game.get_all_dices_details()}"
+        assert game.is_game_finished is False
+
+        round, hand_nb = 1, 0
+        assert game.round == round
+        assert game.hand_nb == hand_nb
 
     def test_close_round(self, game: Game) -> None:
         right_player = random.choice(list(game.players.values()))
@@ -925,7 +961,9 @@ class TestGame:
     def test_n_max_dices_in_game(
         self, game: Game, n_players: int, n_init_dices: int
     ) -> None:
-        assert len(list(game.players.values())[0].dices) == n_init_dices, "1"
+        assert (
+            len(list(game.players.values())[0].dices) == n_init_dices
+        ), f"{list(game.players.values())[0].dices}, vs {n_init_dices}"
         assert list(game.players.values())[0].n_dices_left == n_init_dices, "2"
         assert game.n_max_dices == n_init_dices * n_players, "3"
 

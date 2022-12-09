@@ -62,7 +62,7 @@ class Game:
         if isinstance(players, int):
             if players >= 2:
                 players_lst = [
-                    Player()
+                    Player(n_init_dices_per_player=self.n_init_dices)
                     for _ in range(
                         players
                     )  # game makes sure that the players have the same dices as the game prescribes
@@ -76,7 +76,11 @@ class Game:
             if all([isinstance(player, Player) for player in players]):
                 if len(players) >= 2:
                     if len(set([player.name for player in players])) == len(players):
-                        self._players = {player.name: player for player in players}
+                        # self._players = {player.name: player for player in players}
+                        self._players = {}
+                        for player in players:
+                            player.n_init_dices = self.n_init_dices
+                            self.players[player.name] = player
                     elif len(set([player.name for player in players])) != len(players):
                         raise InvalidGameInput(
                             "".join([player.name for player in players]),
@@ -483,9 +487,10 @@ class Game:
         self._rounds_history[round][
             "n_players_at_beginning_round"
         ] = n_players_at_beginning_round
-        self._rounds_history[round][
-            "n_players_at_end_round"
-        ] = n_players_at_beginning_round
+        self._rounds_history[round]["n_players_at_end_round"] = n_players_at_end_round
+        self._rounds_history[round]["decision_code"] = decision_outcome_details.get(
+            "decision_code"
+        )
 
     def allocate_left_players_to_right_players(
         self, allocate_same_number_of_dices: bool = False
