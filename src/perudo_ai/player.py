@@ -18,7 +18,7 @@ class Player:
         self.name = name
         self.n_dices_left = n_init_dices_per_player
         self.n_players = n_players
-        self._dices: List[str] = random.choices(
+        self.dices: List[str] = random.choices(
             POSSIBLE_VALUES, k=n_init_dices_per_player
         )
         # self.n_dices_left = n_init_dices
@@ -28,20 +28,31 @@ class Player:
         return f"Player(name={self.name})"
 
     @property
-    def n_dices_left(self) -> int:
-        return self._n_dices_left
-
-    @property
     def dices(self) -> List[str]:
         return self._dices
+
+    @dices.setter
+    def dices(self, dices_lst: List[str]) -> None:
+        if not (isinstance(dices_lst, list)):
+            raise InvalidGameInput("Dices should be a list of string!")
+        else:
+            for dice in dices_lst:
+                if not (isinstance(dice, str)):
+                    raise InvalidGameInput("Dices should be a list of string!")
+
+        self._dices = dices_lst
+
+    @property
+    def n_dices_left(self) -> int:
+        return self._n_dices_left
 
     @n_dices_left.setter
     def n_dices_left(self, n_dices: int) -> None:
         if not (isinstance(n_dices, int) and n_dices >= 0):
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
-        self._dices: List[str] = random.choices(
-            POSSIBLE_VALUES, k=n_dices
-        )  # be careful player who looses dices shuffled it twice, not so much important at this stage
+        # self._dices: List[str] = random.choices(
+        #     POSSIBLE_VALUES, k=n_dices
+        # )  # be careful player who looses dices shuffled it twice, not so much important at this stage
         self._n_dices_left = n_dices
 
     def shuffle_dices(self) -> None:
@@ -49,6 +60,10 @@ class Player:
 
     def take_one_dice_out(self) -> None:
         self.n_dices_left -= 1
+        try:
+            self.dices.pop(0)
+        except IndexError:
+            self.dices = []
 
     def choose_decision(self) -> Decision:
         pass
