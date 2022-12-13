@@ -501,7 +501,7 @@ class Game:
         ):  # game attributes a left playeallocate_left_players_to_right_playersr to all players and also the same number of dices
             player.left_player = players_lst[i - 1]
             if allocate_same_number_of_dices:
-                player.n_dices_left = self._n_init_dices
+                player.n_dices_left = self.n_init_dices
 
     def close_round(self) -> None:
         # put hand_nb to 0
@@ -509,6 +509,8 @@ class Game:
         # if 0 remove this player from the game
         # reallocate the left player to the new circle of players
         # shuffle all dices
+        if IS_DEBUG_MODE:
+            print(f"close round being called with {self.players}")
         self.is_round_finished = True
         self.round += 1
         self.hand_nb = 0
@@ -518,8 +520,10 @@ class Game:
                 player_to_be_removed = (
                     player.name
                 )  # avoir RuntimeError, dictionary changed size during iteration
+                if IS_DEBUG_MODE:
+                    print(f"Player to be removed {player}")
         if player_to_be_removed:
-            del self.players[player.name]
+            del self.players[player_to_be_removed]
             for player in self.players.values():
                 player.shuffle_dices()
             self.allocate_left_players_to_right_players()

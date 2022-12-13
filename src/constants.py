@@ -6,6 +6,7 @@ __all__ = [
     "DEV_MODE",
     "N_PLAYERS",
     "PACO",
+    "IS_DEBUG_MODE",
 ]
 
 
@@ -15,6 +16,7 @@ class Constants:
     DEV_MODE = "DEV_MODE"
     N_PLAYERS = "N_PLAYERS"
     PACO = "PACO"
+    IS_DEBUG_MODE = "IS_DEBUG_MODE"
 
 
 params = {
@@ -23,6 +25,7 @@ params = {
     Constants.DEV_MODE: True,
     Constants.N_PLAYERS: 3,
     Constants.PACO: "PACO",
+    Constants.IS_DEBUG_MODE: True,
 }
 
 POSSIBLE_VALUES = params.get(Constants.POSSIBLE_VALUES)
@@ -30,3 +33,4 @@ N_INIT_DICES_PER_PLAYER = params.get(Constants.N_INIT_DICES_PER_PLAYER)
 DEV_MODE = params.get(Constants.DEV_MODE)
 N_PLAYERS = params.get(Constants.N_PLAYERS)
 PACO = params.get(Constants.PACO)
+IS_DEBUG_MODE = params.get(Constants.IS_DEBUG_MODE)

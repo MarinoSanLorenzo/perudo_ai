@@ -64,6 +64,74 @@ class TestGame:
                 (left_player, left_player.take_optimal_decision()),
             )
 
+    def test_close_round_loose_player3(self) -> None:
+        game = Game(
+            players=[Player("Marc"), Player("Luc"), Player("Louis")], n_init_dices=1
+        )
+        right_player = game.players.get("Marc")
+        left_player = right_player.left_player
+        assert sum(list(game.get_all_dices_details().values())) == 3
+        game.process_decisions(
+            (right_player, Decision(Raise(3, PACO))),
+            (left_player, Decision(bluff=True)),
+        )
+        assert 0 in game._rounds_history
+        assert 0 in game._rounds_history.get(0).get("hand_nb")
+
+    def test_close_round_loose_player2(self):  # TODO:finist the logic
+        game = Game(
+            players=[Player("Marc"), Player("Luc"), Player("Louis")], n_init_dices=1
+        )
+        round, hand_nb = 0, 0
+        right_player = game.players.get("Marc")
+        left_player = right_player.left_player
+        dices_details_per_player_at_round_0 = game.get_dices_details_per_player()
+        assert sum(list(game.get_all_dices_details().values())) == 3
+        game.process_decisions(
+            (right_player, Decision(Raise(1, PACO))),
+            (left_player, Decision(Raise(3, "2"))),
+        )
+        assert round in game._rounds_history
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+
+        hand_nb = 1
+        right_player = left_player
+        left_player = right_player.left_player
+        dices_details_per_player_at_round_0_hand_1 = game.get_dices_details_per_player()
+        game.process_decisions(
+            (right_player, Decision(Raise(3, "4"))),
+            (left_player, Decision(Raise(3, "5"))),
+        )
+
+        assert (
+            dices_details_per_player_at_round_0
+            == dices_details_per_player_at_round_0_hand_1
+        )  # checking that game does not shuffle dices between hands
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+
+        hand_nb = 2
+        right_player = left_player
+        left_player = right_player.left_player
+        decision_details = game.process_decisions(
+            (right_player, Decision(Raise(3, "6"))), (left_player, Decision(bluff=True))
+        )
+        assert hand_nb in game._rounds_history.get(round).get("hand_nb")
+        assert len(game.players) == 2
+        dices_details_per_player_at_round_1 = game.get_dices_details_per_player()
+        assert (
+            dices_details_per_player_at_round_0 != dices_details_per_player_at_round_1
+        )
+        assert game._rounds_history[round]["n_players_at_beginning_round"] == 3
+        assert game._rounds_history[round]["n_players_at_end_round"] == 2
+        assert game._rounds_history[round]["nb_total_dices_at_beginning_round"] == 3
+        assert decision_details.get("nb_total_dices_at_end_round") == 2, pprint(
+            decision_details
+        )
+        assert (
+            game._rounds_history[round]["nb_total_dices_at_end_round"] == 2
+        ), f"{game.get_dices_details_per_player()} {game.get_all_dices_details()}"
+        assert game.is_game_finished is False
+
     def test_close_round_loose_player(self):  # TODO:finist the logic
         game = Game(players=3, n_init_dices=1)
         round, hand_nb = 0, 0
@@ -323,7 +391,7 @@ class TestGame:
         game = Game(players=players)
         game.hand_nb = hand_nb
         for player, dice in zip(game.players.values(), dices):
-            player._dices = dice
+            player.dices = dice
         right_player = game.players.get(right_player_name)
         left_player = right_player.left_player
         left_player_decision = Decision(bluff=True)
