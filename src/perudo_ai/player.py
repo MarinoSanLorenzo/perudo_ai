@@ -25,7 +25,10 @@ class Player:
         self.n_max_dices: int = n_init_dices_per_player * n_players
 
     def __repr__(self) -> str:
-        return f"Player(name={self.name})"
+        try:
+            return f"Player(name={self.name}, n_dices_left={self.n_dices_left})"
+        except AttributeError:  # handle fact that self.n_dices_left has not been set yet
+            return f"Player(name={self.name})"
 
     @property
     def dices(self) -> List[str]:
@@ -41,6 +44,8 @@ class Player:
                     raise InvalidGameInput("Dices should be a list of string!")
 
         self._dices = dices_lst
+        if self.n_dices_left != len(dices_lst):
+            self.n_dices_left = len(dices_lst)
 
     @property
     def n_dices_left(self) -> int:
@@ -48,25 +53,29 @@ class Player:
 
     @n_dices_left.setter
     def n_dices_left(self, n_dices: int) -> None:
+        if IS_DEBUG_MODE:
+            print(f"[0] - n_dices_left setter is called for player {self}")
         if not (isinstance(n_dices, int) and n_dices >= 0):
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
-        # self._dices: List[str] = random.choices(
-        #     POSSIBLE_VALUES, k=n_dices
-        # )  # be careful player who looses dices shuffled it twice, not so much important at this stage
         self._n_dices_left = n_dices
+        try:
+            nb_dices = len(self.dices)
+        except AttributeError:
+            nb_dices = None
+        if n_dices != nb_dices:
+            self.dices: List[str] = random.choices(
+                POSSIBLE_VALUES, k=n_dices
+            )  # be careful player who looses dices shuffled it twice, not so much important at this stage
+        if IS_DEBUG_MODE:
+            print(f"[1] - n_dices_left setter is called for player {self}")
 
     def shuffle_dices(self) -> None:
-        self._dices = random.choices(POSSIBLE_VALUES, k=self.n_dices_left)
+        self.dices = random.choices(POSSIBLE_VALUES, k=self.n_dices_left)
 
     def take_one_dice_out(self) -> None:
+        if IS_DEBUG_MODE:
+            print(f"take_one_dice_out is called for player {self}")
         self.n_dices_left -= 1
-        try:
-            self.dices.pop(0)
-        except IndexError:
-            self.dices = []
-
-    def choose_decision(self) -> Decision:
-        pass
 
     def give_decision_to_other_player(
         self, decision: Union[Decision, None, str] = None
