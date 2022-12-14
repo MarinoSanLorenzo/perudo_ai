@@ -51,7 +51,9 @@ class TestGame:
         while not (game.is_game_finished):
             if game.round == 0 and game.hand_nb == 0:
                 right_player = random.choice(list(game.players.values()))
-            elif game.hand_nb == 0 and game.round != 0:
+            elif (
+                game.hand_nb == 0 and game.round != 0
+            ):  # if not looser from previous round take looser from the left
                 looser_from_previous_round = game._rounds_history.get(
                     game.round - 1
                 ).get("looser")
@@ -77,6 +79,25 @@ class TestGame:
         )
         assert 0 in game._rounds_history
         assert 0 in game._rounds_history.get(0).get("hand_nb")
+
+        assert sum(list(game.get_all_dices_details().values())) == 2
+
+        looser_from_previous_round = game._rounds_history.get(game.round - 1).get(
+            "looser"
+        )
+        left_player_to_looser_player = game._rounds_history.get(game.round - 1).get(
+            "left_player_to_looser_player"
+        )
+        right_player = game.players.get(looser_from_previous_round)
+        if not right_player:
+            right_player = game.players.get(left_player_to_looser_player.name)
+        if looser_from_previous_round == "Marc":
+            expected_right_player_name = "Louis"
+        elif looser_from_previous_round == "Louis":
+            expected_right_player_name = "Luc"
+        elif looser_from_previous_round == "Luc":
+            expected_right_player_name = "Marc"
+        assert right_player.name == expected_right_player_name
 
     def test_close_round_loose_player2(self):  # TODO:finist the logic
         game = Game(
@@ -269,6 +290,11 @@ class TestGame:
             game._rounds_history[round]["looser"]
             == game._decision_outcome_details.get("looser")
             == looser
+        )
+        assert (
+            game._rounds_history[round]["left_player_to_looser_player"]
+            == game._decision_outcome_details.get("left_player_to_looser_player")
+            == left_player.left_player
         )
         assert (
             game._rounds_history[round]["nb_total_dices_at_beginning_round"]

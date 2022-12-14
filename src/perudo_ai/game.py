@@ -142,7 +142,7 @@ class Game:
         decision_outcome = None
         decision_code = None
         nb_dices_bet_on_and_present_in_game = None
-        winner, looser = None, None
+        winner, looser, left_player_to_looser_player = None, None, None
 
         if (
             first_play
@@ -307,6 +307,7 @@ class Game:
                 )
                 left_player.take_one_dice_out()
                 winner, looser = right_player_name, left_player_name
+                left_player_to_looser_player = left_player.left_player
                 self.close_round()
 
             elif (
@@ -319,6 +320,7 @@ class Game:
                 )
                 right_player.take_one_dice_out()
                 winner, looser = left_player_name, right_player_name
+                left_player_to_looser_player = right_player.left_player
                 self.close_round()
             else:  # 2.3
                 raise NotImplementedError("2.3")
@@ -343,6 +345,7 @@ class Game:
             "all_dices_details": all_dices_details,
             "winner": winner,
             "looser": looser,
+            "left_player_to_looser_player": left_player_to_looser_player,
             "nb_total_dices_at_beginning_round": nb_total_dices_at_beginning_round,
             "nb_total_dices_at_end_round": sum(
                 list(self.get_all_dices_details().values())
@@ -424,6 +427,9 @@ class Game:
         left_player_decision = decision_outcome_details.get("left_player_decision")
         right_player_name = decision_outcome_details.get("right_player_name")
         left_player_name = decision_outcome_details.get("left_player_name")
+        left_player_to_looser_player = decision_outcome_details.get(
+            "left_player_to_looser_player"
+        )
         decision_outcome = decision_outcome_details.get("decision_outcome")
         hand_nb = decision_outcome_details.get("hand_nb")
         dices_details_per_player = decision_outcome_details.get(
@@ -472,6 +478,9 @@ class Game:
         self._rounds_history[round]["all_dices_details"] = all_dices_details
         self._rounds_history[round]["winner"] = winner
         self._rounds_history[round]["looser"] = looser
+        self._rounds_history[round][
+            "left_player_to_looser_player"
+        ] = left_player_to_looser_player
         self._rounds_history[round][
             "nb_total_dices_at_beginning_round"
         ] = nb_total_dices_at_beginning_round
