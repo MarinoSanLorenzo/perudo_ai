@@ -14,6 +14,29 @@ from typing import *
 
 class TestProbaCalculator:
     @pytest.mark.parametrize(
+        "dice_face, n_dices, n_dices_left_in_game, dices_details_per_player, proba_expected",
+        [
+            ("2", 2, 2, {"2": 1}, 1 / 3),
+            (PACO, 2, 2, {PACO: 1}, 1 / 6),
+            (PACO, 10, 10, {"3": 1}, 0),
+        ],
+    )
+    def test_calc_discrete_proba4(
+        self,
+        dice_face: str,
+        n_dices: int,
+        n_dices_left_in_game: int,
+        dices_details_per_player: Dict[str, int],
+        proba_expected: float,
+    ) -> None:
+        proba_discrete_of_having_exactly_k_dices = calc_discrete_proba(
+            dice_face, n_dices, n_dices_left_in_game, dices_details_per_player
+        )
+        assert proba_discrete_of_having_exactly_k_dices >= 0
+        assert proba_discrete_of_having_exactly_k_dices <= 1
+        assert math.isclose(proba_discrete_of_having_exactly_k_dices, proba_expected)
+
+    @pytest.mark.parametrize(
         "dice_face, n_dices, n_dices_left_in_game, dices_details_per_player",
         [
             ("2", 5, 20, {"3": 5}),
