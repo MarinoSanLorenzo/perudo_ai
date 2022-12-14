@@ -6,10 +6,25 @@ from math import factorial as fact
 __all__ = ["calc_discrete_proba"]
 
 # TOOD:
-# 1. calculate probabilities of having exactly a number of dices + probabilities
+# 1. calculate probabilities of having exactly a number of dices + probabilities --> OK
 # 2. calculate probabilities of having less than a number assert
-# 3. calculate proba to have more than or equal
+# 3. calculate proba to have more than or equal (1-2.)
+# 4. calculate confidence intervals
+# 5. optimal decision
 
+def calc_proba_to_have_more_than_or_equal(dice_face: str,
+    n_dices: int,
+    n_dices_left_in_game: int,
+    dices_details_per_player: Dict[str, int],
+) -> float:#TODO:test
+    return 1- calc_proba_to_have_less_than_strictly(dice_face, n_dices, n_dices_left_in_game, dices_details_per_player)
+
+def calc_proba_to_have_less_than_strictly(    dice_face: str,
+    n_dices: int,
+    n_dices_left_in_game: int,
+    dices_details_per_player: Dict[str, int],
+) -> float:#TODO:test
+    return sum(list[calc_discrete_proba(dice_face, n_dices, n_dices_left_in_game, dices_details_per_player) for n_dice in range(n_dices)])
 
 def calc_discrete_proba(
     dice_face: str,
