@@ -41,28 +41,28 @@ def find_n_k_adjusted(
     return n, k, p
 
 
+def calc_proba_exactly_equal_to(n: int, k: int, p: float) -> float:
+    if (n >= k) and (n >= 0) and (k >= 0):
+        proba_discrete_of_having_exactly_k_dices = (
+            (fact(n) / (fact(k) * fact(n - k))) * (p**k) * ((1 - p) ** (n - k))
+        )  # discrete binomial probability
+        return proba_discrete_of_having_exactly_k_dices
+    else:
+        return 0
+
+
 def calc_proba_to_have_more_than_or_equal(
     dice_face: str,  # raise
     n_dices_bet_on: int,
     total_nb_dices_left_in_game: int,
     dices_details_per_player: Dict[str, int],
 ) -> float:
-    n, k, _ = find_n_k_adjusted(
+    n, k, p = find_n_k_adjusted(
         dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player
     )
     if k == 0:
         return 1
-    return sum(
-        [
-            calc_discrete_proba(
-                dice_face,
-                n_dices_bet_on,
-                total_nb_dices_left_in_game,
-                dices_details_per_player,
-            )
-            for n_dice in range(k, n + 1)
-        ]
-    )
+    return sum([calc_proba_exactly_equal_to(n, n_dice, p) for n_dice in range(k)])
 
 
 def calc_proba_to_have_less_than_strictly(
@@ -71,22 +71,10 @@ def calc_proba_to_have_less_than_strictly(
     total_nb_dices_left_in_game: int,
     dices_details_per_player: Dict[str, int],
 ) -> float:
-    n, k, _ = find_n_k_adjusted(
+    n, k, p = find_n_k_adjusted(
         dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player
     )
-    if k == 0:
-        return 0
-    return sum(
-        [
-            calc_discrete_proba(
-                dice_face,
-                n_dices_bet_on,
-                total_nb_dices_left_in_game,
-                dices_details_per_player,
-            )
-            for n_dice in range(k)
-        ]
-    )
+    return sum([calc_proba_exactly_equal_to(n, n_dice, p) for n_dice in range(k)])
 
 
 def calc_discrete_proba(
@@ -98,10 +86,4 @@ def calc_discrete_proba(
     n, k, p = find_n_k_adjusted(
         dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player
     )
-    if (n >= k) and (n >= 0) and (k >= 0):
-        proba_discrete_of_having_exactly_k_dices = (
-            (fact(n) / (fact(k) * fact(n - k))) * (p**k) * ((1 - p) ** (n - k))
-        )  # discrete binomial probability
-        return proba_discrete_of_having_exactly_k_dices
-    else:
-        return 0
+    return calc_proba_exactly_equal_to(n, k, p)

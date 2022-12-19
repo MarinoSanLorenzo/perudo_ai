@@ -12,19 +12,40 @@ from typing import *
 # install with pip install -e src/
 
 
-class TestProbaCalculator:
+class TestProbaCalculator:  #
     @pytest.mark.parametrize(
         "dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player, proba_raise_expected, proba_bluff_expected",
         [
-            ("2", 2, 2, {"2": 1}, 1 / 3, 2 / 3),
+            ("2", 2, 2, {"2": 1}, 1 / 3, 1 / 3),
             (PACO, 2, 2, {PACO: 1}, 1 / 6, 1 / 6),
-            (PACO, 2, 2, {"3": 1}, 0, 1),
-            ("5", 5, 5, {"3": 5}, 0, 1),
-            ("5", 4, 4, {"5": 4}, 1, 0),
+            (
+                PACO,
+                2,
+                2,
+                {"3": 1},
+                0,
+                5 / 6,
+            ),  # P(N_PACO<2 | N_DICES = 2, D1="3") = P(N_PACO<1 | N_DICES = 1) = P(N_PACO = 0 | N_DICES = 1)
+            (
+                "5",
+                5,
+                5,
+                {"3": 5},
+                0,
+                1,
+            ),  # P(N_5<5 | N_DICES = 5, D1="3", D2="3",  D3="3",  D4="3",  D5="3") =  P(N_5=0 | N_DICES = 5, D1="3", D2="3",  D3="3",  D4="3",  D5="3")=1 + P(N_5=1 | N_DICES = 5, D1="3", D2="3",  D3="3",  D4="3",  D5="3")=0 + ....=
+            (
+                "5",
+                4,
+                4,
+                {"5": 4},
+                1,
+                0,
+            ),  # P(N_5<4 | N_DICES = 4, D1="5", D2="3",  D3="3",  D4="3") =  P(N_5 = 0  | N_DICES = 4, D1="5", D2="5",  D3="5",  D4="5") = 0  + .. P(N_5 = 3  | N_DICES = 4, D1="5", D2="5",  D3="5",  D4="5") = 0
             ("5", 4, 10, {"5": 5}, 1, 0),
         ],
     )
-    def test_calc_proba_to_have_less_than_strictly(
+    def test_calc_proba_to_have_less_than_strictly(  # tTODO: finish
         self,
         dice_face: str,
         n_dices_bet_on: int,
