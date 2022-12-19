@@ -62,11 +62,13 @@ def calc_proba_to_have_more_than_or_equal(
     )
     if k == 0:
         return 1
-    return sum([calc_proba_exactly_equal_to(n, n_dice, p) for n_dice in range(k)])
+    return sum(
+        [calc_proba_exactly_equal_to(n, n_dice, p) for n_dice in range(k, n + 1)]
+    )
 
 
 def calc_proba_to_have_less_than_strictly(
-    dice_face: str,  # bluff TODO:test
+    dice_face: str,  # bluff
     n_dices_bet_on: int,
     total_nb_dices_left_in_game: int,
     dices_details_per_player: Dict[str, int],
