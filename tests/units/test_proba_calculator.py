@@ -16,16 +16,32 @@ class TestProbaCalculator:  #
     @pytest.mark.parametrize(
         "dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player, proba_raise_expected, proba_bluff_expected",
         [
-            ("2", 2, 2, {"2": 1}, 1 / 3, 1 / 3),
-            (PACO, 2, 2, {PACO: 1}, 1 / 6, 1 / 6),
+            (
+                "2",
+                2,
+                2,
+                {"2": 1},
+                1 / 3,
+                2 / 3,
+            ),  # P[raise] = P[N_2 >=2 | N_DICES=2, D1="2"] = P[N_2 >=1 | N_DICES=1] = P[N_2=1] = 1/3
+            # P[bluff] =  P[N_2 < 2 | N_DICES=2, D1="2"] = P[N_2 <1 | N_DICES=1] = P[N_2=0] = 2/3
+            (
+                PACO,
+                2,
+                2,
+                {PACO: 1},
+                1 / 6,
+                5 / 6,
+            ),  # P[bluff] =  P[N_paco < 2 | N_DICES=2, D1="PACO"] = P[N_PACO <1 | N_DICES=1] = P[N_PACO=0] = 5/3
             (
                 PACO,
                 2,
                 2,
                 {"3": 1},
                 0,
-                5 / 6,
+                1,
             ),  # P(N_PACO<2 | N_DICES = 2, D1="3") = P(N_PACO<1 | N_DICES = 1) = P(N_PACO = 0 | N_DICES = 1)
+            # P[bluff] = P(N_PACO<2 | N_DICES = 2, D1="3") = P(N_PACO<2 | N_DICES = 1) = P(N_PACO = 1 | N_DICES = 1)+ P(N_PACO = 0 | N_DICES = 1) = 1/6 + 5/6
             (
                 "5",
                 5,
