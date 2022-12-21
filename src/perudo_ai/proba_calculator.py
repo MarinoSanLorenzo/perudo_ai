@@ -3,6 +3,8 @@ from typing import *
 from constants import *
 from math import factorial as fact
 from perudo_ai.custom_exceptions_and_errors import GameErrorMessage, InvalidGameInput
+from scipy.stats import norm
+from perudo_ai.decision import Decision
 
 __all__ = [
     "calc_discrete_proba",
@@ -17,8 +19,28 @@ __all__ = [
 # 3. calculate proba to have more than or equal (1-2.)
 # 4. calculate confidence intervals
 # 5. optimal decision
+
+
+def take_optimal_decision() -> Decision:
+    pass
+
+
+def get_confidence_interval(
+    dice_face: str,
+    n_dices_bet_on: int,  # n: number of dices that Player bets on
+    total_nb_dices_left_in_game: int,  # n:  total number of dices left in the game
+    dices_details_per_player: Dict[str, int],
+    alpha: float = 0.05,
+) -> Tuple[int, int]:
+    n, _, p = find_n_k_adjusted(
+        dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player
+    )
+    z = norm.ppf(1 - alpha / 2)
+    return p - math.sqrt((p * (1 - p)) / n), p + math.sqrt((p * (1 - p)) / n)
+
+
 def find_n_k_adjusted(
-    dice_face: str,  # raise
+    dice_face: str,
     n_dices_bet_on: int,  # n: number of dices that Player bets on
     total_nb_dices_left_in_game: int,  # n:  total number of dices left in the game
     dices_details_per_player: Dict[str, int],
