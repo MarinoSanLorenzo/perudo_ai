@@ -5,12 +5,15 @@ from math import factorial as fact
 from perudo_ai.custom_exceptions_and_errors import GameErrorMessage, InvalidGameInput
 from scipy.stats import norm
 from perudo_ai.decision import Decision
+import pandas as pd
+from collections import defaultdict
 
 __all__ = [
     "calc_discrete_proba",
     "calc_proba_to_have_less_than_strictly",
     "calc_proba_to_have_more_than_or_equal",
     "find_n_k_adjusted",
+    "calculate_probas_of_all_decisions",
 ]
 
 # TOOD:
@@ -19,10 +22,52 @@ __all__ = [
 # 3. calculate proba to have more than or equal (1-2.)
 # 4. calculate confidence intervals
 # 5. optimal decision
+infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
+
+
+def find_the_most_probable_outcome(
+    probas: Dict[str, Dict[int, Dict[str, float]]]
+) -> Decision:
+    pass
 
 
 def take_optimal_decision() -> Decision:
     pass
+
+
+def calculate_probas_of_all_decisions(
+    total_nb_dices_left_in_game: int, player_dices: Dict[str, int]
+) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, Dict[int, Dict[str, float]]]]:
+    dices_details_per_player = Counter(player_dices)  # TODO:test
+    probas = infinite_defaultdict()
+    # { 'raise' : {1:{PACO:proba, '2 :,...., '6':proba}, 2:{PACO:proba, '2 :,...., '6':proba}, ..., total_nb_dices:{PACO:proba, '2 :,...., '6':proba}}
+    #   'bluff': {1:{PACO:proba, '2 :,...., '6':proba}, 2:{PACO:proba, '2 :,...., '6':proba}, ..., total_nb_dices:{PACO:proba, '2 :,...., '6':proba}}
+    for decision in ["raise", "bluff"]:
+        for n_dices_bet_on in range(total_nb_dices_left_in_game + 1):
+            for dice_face in POSSIBLE_VALUES:
+                if decision == "raise":
+                    proba = calc_proba_to_have_more_than_or_equal(
+                        dice_face,
+                        n_dices_bet_on,
+                        total_nb_dices_left_in_game,
+                        dices_details_per_player,
+                    )
+                elif decision == "bluff":
+                    proba = calc_proba_to_have_less_than_strictly(
+                        dice_face,
+                        n_dices_bet_on,
+                        total_nb_dices_left_in_game,
+                        dices_details_per_player,
+                    )
+                # print(decision, n_dices_bet_on, dice_face, proba)
+                probas[decision][n_dices_bet_on][dice_face] = proba
+
+    probas_raise, probas_bluff = probas.get("raise"), probas.get("bluff")
+    return (
+        pd.DataFrame(probas_raise).unstack(),
+        pd.DataFrame(probas_bluff).unstack(),
+        probas,
+    )
 
 
 def get_confidence_interval(
