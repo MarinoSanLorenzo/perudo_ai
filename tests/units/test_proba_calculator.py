@@ -8,12 +8,13 @@ import math
 from perudo_ai.proba_calculator import *
 from constants import *
 from typing import *
-from perudo_ai.decision import Decision
+from perudo_ai.decision import Decision, Raise
 from perudo_ai.game import Game
 from tests.fixtures import *
 import random
 from collections import Counter, defaultdict
 from pprint import pprint
+import pandas as pd
 
 # install with pip install -e src/
 
@@ -28,38 +29,27 @@ class TestProbaCalculator:
             pass
         right_player = random.choice(list(game.players.values()))
         total_nb_dices_left_in_game = game.total_nb_dices
-        dices_details_per_player = Counter(right_player.dices)
-        infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
-        probas = infinite_defaultdict()
-        # { 'raise' : {1:{PACO:proba, '2 :,...., '6':proba}, 2:{PACO:proba, '2 :,...., '6':proba}, ..., total_nb_dices:{PACO:proba, '2 :,...., '6':proba}}
-        #   'bluff': {1:{PACO:proba, '2 :,...., '6':proba}, 2:{PACO:proba, '2 :,...., '6':proba}, ..., total_nb_dices:{PACO:proba, '2 :,...., '6':proba}}
-        for decision in ["raise", "bluff"]:
-            for n_dices_bet_on in range(total_nb_dices_left_in_game + 1):
-                for dice_face in [PACO, "2", "3", "4", "5", "6"]:
-                    if decision == "raise":
-                        proba = calc_proba_to_have_more_than_or_equal(
-                            dice_face,
-                            n_dices_bet_on,
-                            total_nb_dices_left_in_game,
-                            dices_details_per_player,
-                        )
-                    elif decision == "bluff":
-                        proba = calc_proba_to_have_less_than_strictly(
-                            dice_face,
-                            n_dices_bet_on,
-                            total_nb_dices_left_in_game,
-                            dices_details_per_player,
-                        )
-                    print(decision, n_dices_bet_on, dice_face, proba)
-                    probas[decision][n_dices_bet_on][dice_face] = proba
+        df_probas_raise, df_probas_bluff, probas = calculate_probas_of_all_decisions(
+            total_nb_dices_left_in_game, right_player.dices
+        )
+
+        n_dices, dice_face = max(
+            df_probas_raise[df_probas_raise == max(df_probas_raise)].index
+        )
+        decision_right_player = Decision(Raise(n_dices=n_dices, dice_face=dice_face))
         assert "raise" in probas
         assert "bluff" in probas
         for n_dices_bet_on in range(total_nb_dices_left_in_game + 1):
             assert probas.get("raise")
             assert probas.get("bluff")
-            for dice_face in [PACO, "2", "3", "4", "5", "6"]:
+            for dice_face in POSSIBLE_VALUES:
                 assert probas.get("raise").get(n_dices_bet_on)
                 assert probas.get("bluff").get(n_dices_bet_on)
+        assert n_dices == 4
+        if (right_player.name == "Marc") or (right_player.name == "Luc"):
+            assert dice_face == "2", f"{right_player.name}"
+        if right_player.name == "Jean":
+            assert dice_face == "3", f"{right_player.name}"
 
     @pytest.mark.parametrize(
         "dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player, proba_raise_expected, proba_bluff_expected",
