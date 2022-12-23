@@ -20,13 +20,8 @@ import pandas as pd
 
 
 class TestProbaCalculator:
+    def test_calculate_probas_of_all_decisions(self, game: Game) -> None:
 
-    # @pytest.mark.skip(reason='Not implemented')
-    def test_take_optimal_decision(self, game: Game) -> None:
-        if round == 0:
-            pass
-        else:
-            pass
         right_player = random.choice(list(game.players.values()))
         total_nb_dices_left_in_game = game.total_nb_dices
         df_probas_raise, df_probas_bluff, probas = calculate_probas_of_all_decisions(

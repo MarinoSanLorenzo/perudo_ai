@@ -1,0 +1,19 @@
+,0
+all_dices_details,"defaultdict(<function Game.get_all_dices_details.<locals>.<lambda> at 0x0000026C9203C160>, {'5': 1, '6': 1})"
+decision_code,2.1
+decision_outcome,['Right Player:\tWilliam Whipps won.\nLeft Player:\tBrittney Hyde lost.']
+decision_pairs,"[{'right_player_name': 'William Whipps', 'left_player_name': 'Brittney Hyde', 'right_player_decision': Decision(raise_=Raise(n_dices=1, dice_face='6'), bluff=False, equal=False), 'left_player_decision': Decision(raise_=None, bluff=True, equal=False)}]"
+dices_details_per_player,"{'Brittney Hyde': Counter({'5': 1}), 'William Whipps': Counter({'6': 1})}"
+hand_nb,[0]
+is_round_finished,[True]
+left_player_decision_by_name,"[{'Brittney Hyde': Decision(raise_=None, bluff=True, equal=False)}]"
+left_player_to_looser_player,"Player(name=William Whipps, n_dices_left=1)"
+looser,Brittney Hyde
+n_dices_per_player_at_beginning_round,"{'Brittney Hyde': 1, 'William Whipps': 1}"
+n_dices_per_player_at_end_round,{'William Whipps': 1}
+n_players_at_beginning_round,2
+n_players_at_end_round,1
+nb_total_dices_at_beginning_round,2
+nb_total_dices_at_end_round,1
+right_player_decision_by_name,"[{'William Whipps': Decision(raise_=Raise(n_dices=1, dice_face='6'), bluff=False, equal=False)}]"
+winner,William Whipps
