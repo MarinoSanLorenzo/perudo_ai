@@ -25,16 +25,6 @@ __all__ = [
 infinite_defaultdict = lambda: defaultdict(infinite_defaultdict)
 
 
-def find_the_most_probable_outcome(
-    probas: Dict[str, Dict[int, Dict[str, float]]]
-) -> Decision:
-    pass
-
-
-def take_optimal_decision() -> Decision:
-    pass
-
-
 def calculate_probas_of_all_decisions(
     total_nb_dices_left_in_game: int, player_dices: Dict[str, int]
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, Dict[int, Dict[str, float]]]]:

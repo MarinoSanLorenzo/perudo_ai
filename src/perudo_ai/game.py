@@ -13,10 +13,6 @@ __all__ = [
 ]
 
 
-class Round:
-    pass
-
-
 class Game:
     def __init__(
         self,
