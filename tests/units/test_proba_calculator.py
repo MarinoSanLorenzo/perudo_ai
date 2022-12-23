@@ -33,10 +33,12 @@ class TestProbaCalculator:
             total_nb_dices_left_in_game, right_player.dices
         )
 
-        n_dices, dice_face = max(
+        best_n_dices, best_dice_face = max(
             df_probas_raise[df_probas_raise == max(df_probas_raise)].index
         )
-        decision_right_player = Decision(Raise(n_dices=n_dices, dice_face=dice_face))
+        decision_right_player = Decision(
+            Raise(n_dices=best_dice_face, dice_face=best_dice_face)
+        )
         assert "raise" in probas
         assert "bluff" in probas
         for n_dices_bet_on in range(total_nb_dices_left_in_game + 1):
@@ -45,11 +47,15 @@ class TestProbaCalculator:
             for dice_face in POSSIBLE_VALUES:
                 assert probas.get("raise").get(n_dices_bet_on)
                 assert probas.get("bluff").get(n_dices_bet_on)
-        assert n_dices == 4
+        assert best_n_dices == 4
         if (right_player.name == "Marc") or (right_player.name == "Luc"):
-            assert dice_face == "2", f"{right_player.name}"
+            assert (
+                best_dice_face == "2"
+            ), f"{right_player.name}\n{  df_probas_raise[df_probas_raise == max(df_probas_raise)]}"
         if right_player.name == "Jean":
-            assert dice_face == "3", f"{right_player.name}"
+            assert (
+                best_dice_face == "3"
+            ), f"{right_player.name}\n{  df_probas_raise[df_probas_raise == max(df_probas_raise)]}"
 
     @pytest.mark.parametrize(
         "dice_face, n_dices_bet_on, total_nb_dices_left_in_game, dices_details_per_player, proba_raise_expected, proba_bluff_expected",
