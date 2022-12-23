@@ -7,6 +7,7 @@ __all__ = [
     "N_PLAYERS",
     "PACO",
     "IS_DEBUG_MODE",
+    "PATH_TO_ROUNDS_HISTORY",
 ]
 
 
@@ -17,6 +18,7 @@ class Constants:
     N_PLAYERS = "N_PLAYERS"
     PACO = "PACO"
     IS_DEBUG_MODE = "IS_DEBUG_MODE"
+    PATH_TO_ROUNDS_HISTORY = "PATH_TO_ROUNDS_HISTORY"
 
 
 params = {
@@ -26,6 +28,7 @@ params = {
     Constants.N_PLAYERS: 3,
     Constants.PACO: "PACO",
     Constants.IS_DEBUG_MODE: True,
+    Constants.PATH_TO_ROUNDS_HISTORY: r"./logs/",
 }
 
 POSSIBLE_VALUES = params.get(Constants.POSSIBLE_VALUES)
@@ -34,3 +37,4 @@ DEV_MODE = params.get(Constants.DEV_MODE)
 N_PLAYERS = params.get(Constants.N_PLAYERS)
 PACO = params.get(Constants.PACO)
 IS_DEBUG_MODE = params.get(Constants.IS_DEBUG_MODE)
+PATH_TO_ROUNDS_HISTORY = params.get(Constants.PATH_TO_ROUNDS_HISTORY)

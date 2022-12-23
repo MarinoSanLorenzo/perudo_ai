@@ -77,6 +77,9 @@ class Player:
             print(f"take_one_dice_out is called for player {self}")
         self.n_dices_left -= 1
 
+    def take_decision(self, *args, **kwargs) -> Decision:
+        return self.give_decision_to_other_player(*args, **kwargs)
+
     def give_decision_to_other_player(
         self, decision: Union[Decision, None, str] = None
     ) -> Decision:

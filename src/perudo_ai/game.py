@@ -1,12 +1,15 @@
 import random
 import math
 
+import pandas as pd
+import os
 from perudo_ai.player import Player
 from perudo_ai.decision import Decision
 from constants import *
 from typing import *
 from perudo_ai.custom_exceptions_and_errors import *
 from collections import Counter, defaultdict
+from datetime import datetime
 
 __all__ = [
     "Game",
@@ -48,6 +51,9 @@ class Game:
         'round2
         
         """
+
+    def run(self):
+        pass
 
     @property
     def players(self) -> Dict[str, Player]:
@@ -496,6 +502,22 @@ class Game:
         self._rounds_history[round]["decision_code"] = decision_outcome_details.get(
             "decision_code"
         )
+        if self.is_game_finished:
+            if IS_DEBUG_MODE:
+                print("Logging round history...")
+            self.log_rounds_history()
+
+    def log_rounds_history(self) -> None:
+        now = datetime.now().strftime("%Y_%m_%d_%H%M%S")
+        rounds_history_logs_name = f"rounds_history_logs_name_{now}"
+        with open(
+            os.path.join(PATH_TO_ROUNDS_HISTORY, rounds_history_logs_name + ".json"),
+            "w",
+        ) as f:
+            f.write(str(self._rounds_history))
+        pd.DataFrame(self._rounds_history).to_csv(
+            os.path.join(PATH_TO_ROUNDS_HISTORY, rounds_history_logs_name + ".csv")
+        )
 
     def allocate_left_players_to_right_players(
         self, allocate_same_number_of_dices: bool = False
@@ -534,4 +556,6 @@ class Game:
             self.allocate_left_players_to_right_players()
 
         if len(self.players) == 1:
-            self.is_game_finished == True
+            if IS_DEBUG_MODE:
+                print("The game is finished!")
+            self.is_game_finished = True

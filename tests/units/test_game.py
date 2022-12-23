@@ -1,6 +1,6 @@
-from perudo_ai.game import Game
 from perudo_ai.custom_exceptions_and_errors import *
 from perudo_ai.player import Player
+from perudo_ai.perudo_ai import PerudoAI
 from perudo_ai.decision import Decision, Raise
 from typing import *
 from constants import *
@@ -9,6 +9,7 @@ import random
 from pprint import pprint
 import pytest
 from tests.fixtures import *
+from perudo_ai.game import Game
 
 
 class TestGame:
@@ -32,6 +33,31 @@ class TestGame:
             game.process_decisions(
                 (right_player, right_player.take_optimal_decision()),
                 (left_player, left_player.take_optimal_decision()),
+            )
+
+    @pytest.mark.skip(reason="Not yet implemented")
+    def test_log_rounds_history(self):
+        game = Game(players=[PerudoAI(), PerudoAI()], n_init_dices=1)
+        right_player = random.choice(list(game.players.values()))
+        left_player = right_player.left_player
+        right_player_decision = right_player.take_decision(
+            game.hand_nb, game.total_nb_dices
+        )
+        left_player_decision = left_player.take_decision(
+            game.hand_nb, game.total_nb_dices, right_player_decision
+        )
+        game.process_decisions(
+            (right_player, right_player_decision), (left_player, left_player_decision)
+        )
+        if not game.is_game_finished:
+            right_player, right_player_decision = left_player, left_player_decision
+            left_player = right_player.left_player
+            left_player_decision = left_player.take_decision(
+                game.hand_nb, game.total_nb_dices, right_player_decision
+            )
+            game.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
             )
 
     def test_close_round_loose_player3(self) -> None:
