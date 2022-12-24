@@ -4,12 +4,14 @@ import math
 import pandas as pd
 import os
 from perudo_ai.player import Player
+from perudo_ai.perudo_ai import PerudoAI
 from perudo_ai.decision import Decision
 from constants import *
 from typing import *
 from perudo_ai.custom_exceptions_and_errors import *
 from collections import Counter, defaultdict
 from datetime import datetime
+import time
 
 __all__ = [
     "Game",
@@ -53,7 +55,58 @@ class Game:
         """
 
     def run(self):
-        pass
+        while not self.is_game_finished:
+            if self.hand_nb == 0:
+                print(f'{"*"*20} STARTING NEW HAND {"*"*20}\n')
+
+                if self.round == 0:
+                    right_player = random.choice(list(self.players.values()))
+                elif self.round != 0:
+                    looser_from_past_round = self._rounds_history[self.round - 1].get(
+                        "looser"
+                    )
+                    if looser_from_past_round:
+                        right_player = self.players.get(looser_from_past_round)
+                    elif not looser_from_past_round:
+                        right_player = self._rounds_history[self.round - 1].get(
+                            "left_player_to_looser_player"
+                        )
+                    else:
+                        raise NotImplementedError
+                else:
+                    raise NotImplementedError
+                right_player_decision = self.ask_player_to_make_decision(right_player)
+            elif self.hand_nb != 0:
+                right_player, right_player_decision = left_player, left_player_decision
+            else:
+                raise NotImplementedError
+            print(f"Right Player - {right_player.name}:\t{right_player_decision}")
+            time.sleep(5)
+            left_player = right_player.left_player
+            left_player_decision = self.ask_player_to_make_decision(
+                left_player, right_player_decision
+            )
+            print(f"Left Player - {left_player.name}:\t{left_player_decision}")
+
+            self.process_decisions(
+                (right_player, right_player_decision),
+                (left_player, left_player_decision),
+            )
+
+    def ask_player_to_make_decision(
+        self,
+        player: Union[Player, PerudoAI],
+        right_player_decision: Union[None, Decision] = None,
+    ) -> Decision:
+        if isinstance(player, PerudoAI):
+            player_decision = player.take_decision(
+                self.hand_nb, self.total_nb_dices, right_player_decision
+            )
+        elif isinstance(player, Player):
+            player_decision = player.take_decision()
+        else:
+            raise NotImplementedError
+        return player_decision
 
     @property
     def players(self) -> Dict[str, Player]:
@@ -85,7 +138,7 @@ class Game:
                             self.players[player.name] = player
                     elif len(set([player.name for player in players])) != len(players):
                         raise InvalidGameInput(
-                            "".join([player.name for player in players]),
+                            ", ".join([player.name for player in players]),
                             GameErrorMessage.UNIQUE_PLAYERS_NAME,
                         )
                     else:
@@ -361,7 +414,7 @@ class Game:
             "decision_code": decision_code,
             "nb_dices_bet_on_and_present_in_game": nb_dices_bet_on_and_present_in_game,
         }
-        # add self.hand_nb +=1
+        print(decision_outcome)
         self._decision_outcome_details = decision_outcome_details
         self.save_round_info_to_history()
         return decision_outcome_details

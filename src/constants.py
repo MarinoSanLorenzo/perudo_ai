@@ -24,7 +24,7 @@ class Constants:
 params = {
     Constants.POSSIBLE_VALUES: ["2", "3", "4", "5", "6", Constants.PACO],
     Constants.N_INIT_DICES_PER_PLAYER: 5,
-    Constants.DEV_MODE: True,
+    Constants.DEV_MODE: False,
     Constants.N_PLAYERS: 3,
     Constants.PACO: "PACO",
     Constants.IS_DEBUG_MODE: True,

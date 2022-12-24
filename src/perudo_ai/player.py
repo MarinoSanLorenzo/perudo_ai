@@ -53,8 +53,8 @@ class Player:
 
     @n_dices_left.setter
     def n_dices_left(self, n_dices: int) -> None:
-        if IS_DEBUG_MODE:
-            print(f"[0] - n_dices_left setter is called for player {self}")
+        # if IS_DEBUG_MODE:
+        #     print(f"[0] - n_dices_left setter is called for player {self}")
         if not (isinstance(n_dices, int) and n_dices >= 0):
             raise InvalidGameInput(n_dices, GameErrorMessage.INVALID_PLAYER_INPUT)
         self._n_dices_left = n_dices
@@ -66,15 +66,15 @@ class Player:
             self.dices: List[str] = random.choices(
                 POSSIBLE_VALUES, k=n_dices
             )  # be careful player who looses dices shuffled it twice, not so much important at this stage
-        if IS_DEBUG_MODE:
-            print(f"[1] - n_dices_left setter is called for player {self}")
+        # if IS_DEBUG_MODE:
+        #     print(f"[1] - n_dices_left setter is called for player {self}")
 
     def shuffle_dices(self) -> None:
         self.dices = random.choices(POSSIBLE_VALUES, k=self.n_dices_left)
 
     def take_one_dice_out(self) -> None:
-        if IS_DEBUG_MODE:
-            print(f"take_one_dice_out is called for player {self}")
+        # if IS_DEBUG_MODE:
+        #     print(f"take_one_dice_out is called for player {self}")
         self.n_dices_left -= 1
 
     def take_decision(self, *args, **kwargs) -> Decision:
@@ -88,8 +88,9 @@ class Player:
         else:  # TODO:User input
             is_input_decision_valid = False
             while not is_input_decision_valid:
+                print(self.dices)
                 decision = input(
-                    "Do you want to raise, call for a bluff or equal?[r/b/e]"
+                    f"Do you want to raise, call for a bluff or equal?[r/b/e]"
                 )
                 if decision in ["b", "e", "r", "bluff", "equal", "raise"]:
                     if decision in ["b", "bluff"]:
