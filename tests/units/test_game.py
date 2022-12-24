@@ -15,25 +15,8 @@ from perudo_ai.game import Game
 class TestGame:
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:
-        game = Game()
+        game = Game(players=[Player("Marino"), PerudoAI("AI_1"), PerudoAI("AI_2")])
         game.run()
-        while not (game.is_game_finished):
-            if game.round == 0 and game.hand_nb == 0:
-                right_player = random.choice(list(game.players.values()))
-            elif (
-                game.hand_nb == 0 and game.round != 0
-            ):  # if not looser from previous round take looser from the left
-                looser_from_previous_round = game._rounds_history.get(
-                    game.round - 1
-                ).get("looser")
-                right_player = game.players.get(looser_from_previous_round)
-            else:
-                right_player = left_player
-            left_player = right_player.left_player
-            game.process_decisions(
-                (right_player, right_player.take_optimal_decision()),
-                (left_player, left_player.take_optimal_decision()),
-            )
 
     @pytest.mark.skip(reason="Not yet implemented")
     def test_log_rounds_history(self):

@@ -5,6 +5,10 @@ from typing import *
 from perudo_ai.proba_calculator import calculate_probas_of_all_decisions
 
 
+class PlayerUser(Player):
+    pass
+
+
 class PerudoAI(Player):
     def __init__(
         self,
