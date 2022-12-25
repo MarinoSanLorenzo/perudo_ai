@@ -13,7 +13,8 @@ dices_lst = [
     ["3", "3", PACO, PACO, "6"],
     ["2", "2", PACO, PACO, "5"],
 ]
-two_players_and_one_ai = [PerudoAI("AI"), Player("Jean"), Player("Luc")]
+# two_players_and_one_ai = [PerudoAI("AI"), Player("Jean"), Player("Luc")]
+two_players_and_one_ai = [PerudoAI("Marc"), Player("Jean"), Player("Luc")]
 game_with_ai = Game(two_players_and_one_ai)
 for player, dices in zip(game_with_ai.players.values(), dices_lst):
     player._dices = dices

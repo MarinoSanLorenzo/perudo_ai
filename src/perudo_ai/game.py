@@ -602,10 +602,11 @@ class Game:
                 )  # avoir RuntimeError, dictionary changed size during iteration
                 if IS_DEBUG_MODE:
                     print(f"Player to be removed {player}")
+            player.shuffle_dices()
         if player_to_be_removed:
             del self.players[player_to_be_removed]
-            for player in self.players.values():
-                player.shuffle_dices()
+            # for player in self.players.values():
+            #     player.shuffle_dices()
             self.allocate_left_players_to_right_players()
 
         if len(self.players) == 1:
