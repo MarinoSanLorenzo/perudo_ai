@@ -64,16 +64,25 @@ class TestPerudoAI:
         )
 
         assert is_valid == is_decision_valid_output
-
-        for (
-            n_dices,
-            dice_face,
-        ) in df_probas_raise.index:  # TOOD: test add columns with authorized decisions
-            if right_player_decision:
-                if right_player_decision.raise_:
-                    decision = Decision(Raise(n_dices=n_dices, dice_face=dice_face))
-            if left_player_decision:
-                pass
+        df_probas_raise, df_probas_bluff = add_valid_decision(
+            df_probas_raise,
+            df_probas_bluff,
+            game.hand_nb,
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            game.total_nb_dices,
+        )
+        assert "is_decision_valid" in df_probas_raise
+        assert "is_decision_valid" in df_probas_bluff
+        if not is_valid:  # TODO: go on testing
+            assert df_probas_raise.is_decision_valid.unique()[0] == False
+            # assert df_probas_bluff.is_decision_valid.unique()[0] == False
+        else:
+            pass
+            # assert True in df_probas_raise.is_decision_valid.unique()
+            # assert False in df_probas_raise.is_decision_valid.unique()
+            # assert True in df_probas_bluff.is_decision_valid.unique()
+            # assert False in df_probas_bluff.is_decision_valid.unique()
 
     def test_take_optimal_decision_first_hand(self, game_with_ai: Game) -> None:
         game = game_with_ai
