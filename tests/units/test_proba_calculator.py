@@ -29,7 +29,7 @@ class TestProbaCalculator:
         )
 
         best_n_dices, best_dice_face = max(
-            df_probas_raise[df_probas_raise == max(df_probas_raise)].index
+            df_probas_raise[df_probas_raise.proba == max(df_probas_raise.proba)].index
         )
         decision_right_player = Decision(
             Raise(n_dices=best_dice_face, dice_face=best_dice_face)

@@ -1,3 +1,4 @@
+import pandas as pd
 from perudo_ai.player import Player
 from perudo_ai.decision import Decision, Raise
 from constants import *
@@ -6,7 +7,55 @@ from perudo_ai.proba_calculator import calculate_probas_of_all_decisions
 from perudo_ai.custom_exceptions_and_errors import InvalidGameInput, GameErrorMessage
 import math
 
-__all__ = ["PerudoAI", "is_decision_valid", "check_if_decision_is_valid"]
+__all__ = [
+    "PerudoAI",
+    "is_decision_valid",
+    "check_if_decision_is_valid",
+    "add_valid_decision",
+]
+
+
+def add_valid_decision(
+    df_probas_raise: pd.DataFrame,
+    df_probas_bluff: pd.DataFrame,
+    hand_nb: int,
+    right_player_decision_pair: Tuple[Player, Decision],
+    left_player_decision_pair: Tuple[Player, Decision],
+    total_nb_dices: int,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    right_player, right_player_decision = right_player_decision_pair
+    left_player, left_player_decision = left_player_decision_pair
+    is_decision_valid_lst = []
+    for (
+        n_dices,
+        dice_face,
+    ) in df_probas_raise.index:
+        potential_left_player_decision = Decision(
+            Raise(n_dices=n_dices, dice_face=dice_face)
+        )
+        is_decision_valid_output = check_if_decision_is_valid(
+            hand_nb,
+            (right_player, right_player_decision),
+            (left_player, potential_left_player_decision),
+            total_nb_dices,
+        )
+        is_decision_valid_lst.append(is_decision_valid_output)
+    df_probas_raise["is_decision_valid"] = is_decision_valid_lst
+    is_decision_valid_lst = []
+    for (
+        n_dices,
+        dice_face,
+    ) in df_probas_bluff.index:  # TOOD: test add columns with authorized decisions
+        potential_left_player_decision = Decision(bluff=True)
+        is_decision_valid_output = check_if_decision_is_valid(
+            hand_nb,
+            (right_player, right_player_decision),
+            (left_player, potential_left_player_decision),
+            total_nb_dices,
+        )
+        is_decision_valid_lst.append(is_decision_valid_output)
+    df_probas_bluff["is_decision_valid"] = is_decision_valid_lst
+    return df_probas_raise, df_probas_bluff
 
 
 def check_if_decision_is_valid(
@@ -71,11 +120,7 @@ def is_decision_valid(
                 left_player_decision.raise_.dice_face
                 > right_player_decision.raise_.dice_face
             ):  # 1.1.1 higher dice value
-                decision_outcome, decision_code = (
-                    f"{left_player.left_player.name} to talk",
-                    "1.1.1",
-                )
-                # hand_nb += 1  # TODO:test
+                return None
             else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
                 raise InvalidGameInput(
                     f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
@@ -90,22 +135,14 @@ def is_decision_valid(
                 if (
                     left_player_decision.raise_.dice_face == PACO
                 ):  # 1.2.1.1 left player played higher number of PACO
-                    decision_outcome, decision_code = (
-                        f"{left_player.left_player.name} to talk",
-                        "1.2.1.1",
-                    )
-                    # shand_nb += 1
+                    return None
                 elif (
                     left_player_decision.raise_.dice_face != PACO
                 ):  # 1.2.1.2 left player played higher number of dices but not PACOS
                     if left_player_decision.raise_.n_dices >= (
                         right_player_decision.raise_.n_dices * 2 + 1
                     ):  # 1.2.1.2.1 Left player said more than twice +1
-                        decision_outcome, decision_code = (
-                            f"{left_player.left_player.name} to talk",
-                            "1.2.1.2.1",
-                        )
-                        # hand_nb += 1
+                        return None
                     elif left_player_decision.raise_.n_dices < (
                         right_player_decision.raise_.n_dices * 2 + 1
                     ):  # 1.2.1.2.2 Left player did not say more than twice +1
@@ -123,11 +160,7 @@ def is_decision_valid(
             elif (
                 right_player_decision.raise_.dice_face != PACO
             ):  # 1.2.2 Left player higher number of dices and right player did not play pacos
-                decision_outcome, decision_code = (
-                    f"{left_player.left_player.name} to talk",
-                    "1.2.2",
-                )
-                # self.hand_nb += 1
+                return None
             else:
                 raise NotImplementedError("1.2.3")
         elif (
@@ -166,11 +199,7 @@ def is_decision_valid(
                 elif (
                     left_player_decision.raise_.n_dices >= half_nb_dices_pacos_needed
                 ):  # 1.3.2.1 left player played with pacos  and raise enough
-                    decision_outcome, decision_code = (
-                        f"{left_player.left_player.name} to talk",
-                        "1.3.2.1",
-                    )
-                    hand_nb += 1
+                    return None
                 else:  # 1.3.2.2
                     raise NotImplementedError("1.3.2.2")
             else:  # 1.3.3
@@ -180,39 +209,7 @@ def is_decision_valid(
     elif (
         left_player_decision.bluff is True
     ):  # 2. Left player calls bluff on right player
-        all_dices_details = self.get_all_dices_details()
-        dices_details_per_player = self.get_dices_details_per_player()
-        nb_dices_bet_on_and_present_in_game = (
-            all_dices_details.get(right_player_decision.raise_.dice_face, 0)
-            + all_dices_details.get(PACO, 0)
-            if right_player_decision.raise_.dice_face != PACO
-            else all_dices_details.get(PACO, 0)
-        )
-        if (
-            right_player_decision.raise_.n_dices <= nb_dices_bet_on_and_present_in_game
-        ):  # 2.1 right player has more dices
-            decision_outcome, decision_code = (
-                f"Right Player:\t{right_player_name} won.\nLeft Player:\t{left_player_name} lost.",
-                "2.1",
-            )
-            left_player.take_one_dice_out()
-            winner, looser = right_player_name, left_player_name
-            left_player_to_looser_player = left_player.left_player
-            # self.close_round()
-
-        elif (
-            right_player_decision.raise_.n_dices > nb_dices_bet_on_and_present_in_game
-        ):  # 2.2 right player has not as many dices as he claimed
-            decision_outcome, decision_code = (
-                f"Right Player:\t{right_player_name} lost.\nLeft Player:\t{left_player_name} won.",
-                "2.2",
-            )
-            right_player.take_one_dice_out()
-            winner, looser = left_player_name, right_player_name
-            left_player_to_looser_player = right_player.left_player
-            # self.close_round()
-        else:  # 2.3
-            raise NotImplementedError("2.3")
+        return None
     elif (
         left_player_decision.equal is True
     ):  # 3. Left Player calls equal on right players
@@ -249,19 +246,23 @@ class PerudoAI(Player):
         )
         if (hand_nb == 0) and (right_player_decision is None):
             best_n_dices, best_dice_face = max(
-                df_probas_raise[df_probas_raise == max(df_probas_raise)].index
+                df_probas_raise[
+                    df_probas_raise.proba == max(df_probas_raise.proba)
+                ].index
             )
             return Decision(Raise(n_dices=best_n_dices, dice_face=best_dice_face))
 
         elif right_player_decision is not None:
-            proba_bluff = df_probas_bluff[right_player_decision.raise_]
+            proba_bluff = df_probas_bluff.loc[right_player_decision.raise_, :].squeeze()
             probas_raise = df_probas_raise[
                 df_probas_raise.index > right_player_decision.raise_
             ]
             best_n_dices, best_dice_face = max(
-                probas_raise[probas_raise == max(probas_raise)].index
+                probas_raise[probas_raise.proba == max(probas_raise.proba)].index
             )
-            max_proba_raise = probas_raise[best_n_dices, best_dice_face]
+            max_proba_raise = probas_raise.loc[
+                (best_n_dices, best_dice_face), :
+            ].squeeze()
             if max_proba_raise >= proba_bluff:
                 return Decision(Raise(n_dices=best_n_dices, dice_face=best_dice_face))
             elif max_proba_raise < proba_bluff:

@@ -53,9 +53,15 @@ def calculate_probas_of_all_decisions(
                 probas[decision][n_dices_bet_on][dice_face] = proba
 
     probas_raise, probas_bluff = probas.get("raise"), probas.get("bluff")
-    return (
+    df_probas_raise, df_probas_bluff = (
         pd.DataFrame(probas_raise).unstack(),
         pd.DataFrame(probas_bluff).unstack(),
+    )
+    df_probas_raise = pd.DataFrame(df_probas_raise, columns=["proba"])
+    df_probas_bluff = pd.DataFrame(df_probas_bluff, columns=["proba"])
+    return (
+        df_probas_raise,
+        df_probas_bluff,
         probas,
     )
 

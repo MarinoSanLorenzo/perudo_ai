@@ -7,17 +7,20 @@ from perudo_ai.perudo_ai import PerudoAI
 
 __all__ = ["three_players", "dices_lst", "game", "game_with_ai"]
 
-three_players = [Player(name="Marc"), Player("Jean"), Player("Luc")]
-dices_lst = [
-    ["2", "2", PACO, PACO, "5"],
-    ["3", "3", PACO, PACO, "6"],
-    ["2", "2", PACO, PACO, "5"],
-]
+# three_players = [Player(name="Marc"), Player("Jean"), Player("Luc")]
+# dices_lst = [
+#     ["2", "2", PACO, PACO, "5"],
+#     ["3", "3", PACO, PACO, "6"],
+#     ["2", "2", PACO, PACO, "5"],
+# ]
+# # two_players_and_one_ai = [PerudoAI("AI"), Player("Jean"), Player("Luc")]
 # two_players_and_one_ai = [PerudoAI("AI"), Player("Jean"), Player("Luc")]
-two_players_and_one_ai = [PerudoAI("Marc"), Player("Jean"), Player("Luc")]
-game_with_ai = Game(two_players_and_one_ai)
-for player, dices in zip(game_with_ai.players.values(), dices_lst):
-    player._dices = dices
+# game_with_ai = Game(two_players_and_one_ai)
+# for player, dices in zip(game_with_ai.players.values(), dices_lst):
+#     player._dices = dices
+# game = Game(three_players)
+# for player, dices in zip(game.players.values(), dices_lst):
+#     player._dices = dices
 
 
 @pytest.fixture()
