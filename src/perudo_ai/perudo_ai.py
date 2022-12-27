@@ -79,8 +79,8 @@ def check_if_decision_is_valid(
 
 def is_decision_valid(
     hand_nb: int,
-    right_player_decision_pair: Tuple[Player, Decision],
-    left_player_decision_pair: Tuple[Player, Decision],
+    right_player_decision_pair: Tuple[Union[None, Player], Union[None, Decision]],
+    left_player_decision_pair: Tuple[Union[None, Player], Union[None, Decision]],
     total_nb_dices: int,
 ) -> None:
     first_play = hand_nb == 0
@@ -239,18 +239,33 @@ class PerudoAI(Player):
         self,
         hand_nb: int,
         total_nb_dices_left_in_game: int,
-        right_player_decision: Union[None, Decision] = None,
+        right_player_decision_pair: Tuple[
+            Union[None, Player], Union[None, Decision]
+        ] = (None, None),
     ) -> Decision:
+        right_player, right_player_decision = right_player_decision_pair
         df_probas_raise, df_probas_bluff, probas = calculate_probas_of_all_decisions(
             total_nb_dices_left_in_game, self.dices
         )
+        # TODO: test
+        # df_probas_raise, df_probas_bluff = add_valid_decision(
+        #     df_probas_raise,
+        #     df_probas_bluff,
+        #     hand_nb,
+        #     (right_player, right_player_decision),
+        #     (self, left_player_decision),
+        #     total_nb_dices_left_in_game,
+        # )
+
         if (hand_nb == 0) and (right_player_decision is None):
             best_n_dices, best_dice_face = max(
                 df_probas_raise[
                     df_probas_raise.proba == max(df_probas_raise.proba)
                 ].index
             )
-            return Decision(Raise(n_dices=best_n_dices, dice_face=best_dice_face))
+            left_player_decision = Decision(
+                Raise(n_dices=best_n_dices, dice_face=best_dice_face)
+            )
 
         elif right_player_decision is not None:
             proba_bluff = df_probas_bluff.loc[right_player_decision.raise_, :].squeeze()
@@ -264,9 +279,11 @@ class PerudoAI(Player):
                 (best_n_dices, best_dice_face), :
             ].squeeze()
             if max_proba_raise >= proba_bluff:
-                return Decision(Raise(n_dices=best_n_dices, dice_face=best_dice_face))
+                left_player_decision = Decision(
+                    Raise(n_dices=best_n_dices, dice_face=best_dice_face)
+                )
             elif max_proba_raise < proba_bluff:
-                return Decision(bluff=True)
+                left_player_decision = Decision(bluff=True)
             else:
                 raise NotImplementedError
 
@@ -274,3 +291,5 @@ class PerudoAI(Player):
             raise NotImplementedError
         else:
             raise NotImplementedError
+
+        return left_player_decision
