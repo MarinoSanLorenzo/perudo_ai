@@ -12,6 +12,28 @@ from perudo_ai.custom_exceptions_and_errors import InvalidGameInput
 
 
 class TestPerudoAI:
+    def test_check_is_decision_valid(self) -> None:
+        game = Game(players=[PerudoAI("AI"), PerudoAI("Marc")], n_init_dices=2)
+        assert game.hand_nb == 0
+        ai = game.players.get("AI")
+        right_player = ai
+        left_player = right_player.left_player
+        total_nb_dices_left_in_game = game.total_nb_dices
+        hand_nb = game.hand_nb
+        potential_right_player_decision = Decision(Raise(n_dices=0, dice_face="2"))
+        right_player_decision_pair = (right_player, potential_right_player_decision)
+        left_player_decision_pair = (left_player, None)
+        total_nb_dices = game.total_nb_dices
+
+        is_decision_valid_output = check_if_decision_is_valid(
+            hand_nb=hand_nb,
+            right_player_decision_pair=right_player_decision_pair,
+            left_player_decision_pair=left_player_decision_pair,
+            total_nb_dices=total_nb_dices,
+        )
+
+        assert is_decision_valid_output == True
+
     def test_take_optimal_decision_with_valid_decisions(self) -> None:  # TODO: test
         game = Game(players=[PerudoAI("AI"), PerudoAI("Marc")], n_init_dices=2)
         assert game.hand_nb == 0
@@ -21,9 +43,45 @@ class TestPerudoAI:
         total_nb_dices_left_in_game = game.total_nb_dices
         hand_nb = game.hand_nb
         assert hand_nb == 0
-        # right_player_decision = right_player.take_optimal_decision(
-        #     hand_nb, total_nb_dices_left_in_game, right_player_decision=None
+        right_player_decision_pair = (right_player, None)
+        left_player_decision_pair = (None, None)
+
+        right_player_decision = right_player.take_optimal_decision(
+            hand_nb,
+            total_nb_dices_left_in_game,
+            right_player_decision_pair=right_player_decision_pair,
+            left_player_decision_pair=left_player_decision_pair,
+        )
+        assert isinstance(right_player_decision, Decision)
+        left_player = right_player.left_player
+        left_player_decision = left_player.take_optimal_decision(
+            hand_nb,
+            total_nb_dices_left_in_game,
+            right_player_decision_pair=(right_player, right_player_decision),
+            left_player_decision_pair=(left_player, None),
+        )
+        assert isinstance(left_player_decision, Decision)
+        right_player = left_player
+        right_player_decision = left_player_decision
+        left_player = right_player.left_player
+
+        # left_player_decision = left_player.take_optimal_decision(
+        #     hand_nb, total_nb_dices_left_in_game,
+        #     right_player_decision_pair=(right_player, right_player_decision),
+        #     left_player_decision_pair=(left_player, None)
         # )
+        # assert isinstance(left_player_decision, Decision)
+        #
+        # right_player = left_player
+        # right_player_decision = left_player_decision
+        # left_player = right_player.left_player
+        #
+        # left_player_decision = left_player.take_optimal_decision(
+        #     hand_nb, total_nb_dices_left_in_game,
+        #     right_player_decision_pair=(right_player, right_player_decision),
+        #     left_player_decision_pair=(left_player, None)
+        # )
+        # assert isinstance(left_player_decision, Decision)
 
     @pytest.mark.parametrize(
         "is_valid_raise, is_valid_bluff,  right_player_decision, left_player_decision",
@@ -119,7 +177,8 @@ class TestPerudoAI:
         right_player_decision = right_player.take_optimal_decision(
             hand_nb,
             total_nb_dices_left_in_game,
-            right_player_decision_pair=(None, None),
+            right_player_decision_pair=(right_player, None),
+            left_player_decision_pair=(right_player.left_player, None),
         )
         assert isinstance(right_player_decision, Decision)
         assert right_player_decision.raise_.n_dices == 4

@@ -6,7 +6,7 @@ from perudo_ai.player import Player
 from perudo_ai.perudo_ai import PerudoAI
 
 __all__ = ["three_players", "dices_lst", "game", "game_with_ai"]
-
+#
 # three_players = [Player(name="Marc"), Player("Jean"), Player("Luc")]
 # dices_lst = [
 #     ["2", "2", PACO, PACO, "5"],
