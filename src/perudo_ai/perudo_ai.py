@@ -30,15 +30,29 @@ def add_valid_decision(
         n_dices,
         dice_face,
     ) in df_probas_raise.index:
-        potential_left_player_decision = Decision(
-            Raise(n_dices=n_dices, dice_face=dice_face)
-        )
-        is_decision_valid_output = check_if_decision_is_valid(
-            hand_nb,
-            (right_player, right_player_decision),
-            (left_player, potential_left_player_decision),
-            total_nb_dices,
-        )
+        if right_player_decision is not None:
+            potential_left_player_decision = Decision(
+                Raise(n_dices=n_dices, dice_face=dice_face)
+            )
+            is_decision_valid_output = check_if_decision_is_valid(
+                hand_nb,
+                (right_player, right_player_decision),
+                (left_player, potential_left_player_decision),
+                total_nb_dices,
+            )
+        elif right_player_decision is None:
+            potential_right_player_decision = Decision(
+                Raise(n_dices=n_dices, dice_face=dice_face)
+            )
+            is_decision_valid_output = check_if_decision_is_valid(
+                hand_nb,
+                (right_player, potential_right_player_decision),
+                (left_player, left_player_decision),
+                total_nb_dices,
+            )
+        else:
+            raise NotImplementedError
+
         is_decision_valid_lst.append(is_decision_valid_output)
     df_probas_raise["is_decision_valid"] = is_decision_valid_lst
     is_decision_valid_lst = []
@@ -46,13 +60,22 @@ def add_valid_decision(
         n_dices,
         dice_face,
     ) in df_probas_bluff.index:  # TOOD: test add columns with authorized decisions
-        potential_left_player_decision = Decision(bluff=True)
-        is_decision_valid_output = check_if_decision_is_valid(
-            hand_nb,
-            (right_player, right_player_decision),
-            (left_player, potential_left_player_decision),
-            total_nb_dices,
-        )
+        if right_player_decision is not None:
+            potential_left_player_decision = Decision(bluff=True)
+            is_decision_valid_output = check_if_decision_is_valid(
+                hand_nb,
+                (right_player, right_player_decision),
+                (left_player, potential_left_player_decision),
+                total_nb_dices,
+            )
+        elif right_player_decision is None:
+            potential_right_player_decision = Decision(bluff=True)
+            is_decision_valid_output = check_if_decision_is_valid(
+                hand_nb,
+                (right_player, potential_right_player_decision),
+                (left_player, left_player_decision),
+                total_nb_dices,
+            )
         is_decision_valid_lst.append(is_decision_valid_output)
     df_probas_bluff["is_decision_valid"] = is_decision_valid_lst
     return df_probas_raise, df_probas_bluff
@@ -86,110 +109,105 @@ def is_decision_valid(
     first_play = hand_nb == 0
     right_player, right_player_decision = right_player_decision_pair
     left_player, left_player_decision = left_player_decision_pair
-    right_player_name, left_player_name = right_player.name, left_player.name
 
-    if (
-        first_play
-        and (right_player_decision.raise_)
-        and (right_player.n_dices_left > 1)
-    ):
-        if right_player_decision.raise_.dice_face == PACO:
+    right_player_name = right_player.name
+    try:
+        left_player_name = left_player.name
+    except AttributeError:
+        left_player_name = None
+
+    if right_player_decision:
+        if (
+            first_play
+            and (right_player_decision.raise_)
+            and (right_player.n_dices_left > 1)
+        ):
+            if right_player_decision.raise_.dice_face == PACO:
+                raise InvalidGameInput(
+                    right_player.n_dices_left,
+                    GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND,
+                )
+        if right_player_decision.bluff:
+            raise InvalidGameInput("Can not call bluff at the beginning of the hand.")
+        if right_player_decision.raise_.n_dices > total_nb_dices:
             raise InvalidGameInput(
-                right_player.n_dices_left,
-                GameErrorMessage.NO_PACO_WHEN_STARTING_ROUND,
-            )
-    if right_player_decision.bluff:
-        raise InvalidGameInput("Can not call bluff at the beginning of the hand.")
-    if right_player_decision.raise_.n_dices > total_nb_dices:
-        raise InvalidGameInput(
-            f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={total_nb_dices}",
-            GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
-        )
-    if left_player_decision.raise_:
-        if left_player_decision.raise_.n_dices > total_nb_dices:
-            raise InvalidGameInput(
-                f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={total_nb_dices}",
+                f"raise= {right_player.name}:{right_player_decision.raise_.n_dices} total_nb_dices={total_nb_dices}",
                 GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
             )
-
-    if right_player_decision.raise_ and left_player_decision.raise_:  # 1.RAISE
-        if (
-            left_player_decision.raise_.n_dices == right_player_decision.raise_.n_dices
-        ):  # 1.1 same number of dices
-            if (
-                left_player_decision.raise_.dice_face
-                > right_player_decision.raise_.dice_face
-            ):  # 1.1.1 higher dice value
-                return None
-            else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
+    if left_player_decision:
+        if left_player_decision.raise_:
+            if left_player_decision.raise_.n_dices > total_nb_dices:
                 raise InvalidGameInput(
-                    f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
-                    GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES,
+                    f"raise= {right_player.name}:{right_player_decision.raise_.n_dices}, {left_player.name}:{left_player_decision.raise_.n_dices}  vs total_nb_dices={total_nb_dices}",
+                    GameErrorMessage.RAISE_EXCEED_TOTAL_NB_DICES_LEFT,
                 )
-        elif (
-            left_player_decision.raise_.n_dices > right_player_decision.raise_.n_dices
-        ):  # 1.2 higher number of dices
+    if right_player_decision and left_player_decision:
+        if right_player_decision.raise_ and left_player_decision.raise_:  # 1.RAISE
             if (
-                right_player_decision.raise_.dice_face == PACO
-            ):  # 1.2.1 Left player higher number of dices but right player played PACOS
+                left_player_decision.raise_.n_dices
+                == right_player_decision.raise_.n_dices
+            ):  # 1.1 same number of dices
                 if (
-                    left_player_decision.raise_.dice_face == PACO
-                ):  # 1.2.1.1 left player played higher number of PACO
+                    left_player_decision.raise_.dice_face
+                    > right_player_decision.raise_.dice_face
+                ):  # 1.1.1 higher dice value
                     return None
-                elif (
-                    left_player_decision.raise_.dice_face != PACO
-                ):  # 1.2.1.2 left player played higher number of dices but not PACOS
-                    if left_player_decision.raise_.n_dices >= (
-                        right_player_decision.raise_.n_dices * 2 + 1
-                    ):  # 1.2.1.2.1 Left player said more than twice +1
-                        return None
-                    elif left_player_decision.raise_.n_dices < (
-                        right_player_decision.raise_.n_dices * 2 + 1
-                    ):  # 1.2.1.2.2 Left player did not say more than twice +1
-                        raise InvalidGameInput(
-                            GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
-                                "1.2.1.2.2",
-                                left_player_name,
-                                right_player_name,
-                                right_player_decision.raise_.n_dices * 2 + 1,
-                                left_player_decision.raise_.n_dices,
-                            )
-                        )
-                else:
-                    raise NotImplementedError("1.2.1.3")
-            elif (
-                right_player_decision.raise_.dice_face != PACO
-            ):  # 1.2.2 Left player higher number of dices and right player did not play pacos
-                return None
-            else:
-                raise NotImplementedError("1.2.3")
-        elif (
-            left_player_decision.raise_.n_dices < right_player_decision.raise_.n_dices
-        ):  # 1.3 lower number of dices
-            half_nb_dices_pacos_needed = math.ceil(
-                right_player_decision.raise_.n_dices / 2
-            )
-            if (
-                left_player_decision.raise_.dice_face != "PACO"
-            ):  # 1.3.1 left player did not raise with pacos
-                raise InvalidGameInput(
-                    GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
-                        "1.3.1.1",
-                        left_player_name,
-                        right_player_name,
-                        half_nb_dices_pacos_needed,
-                        left_player_decision.raise_.n_dices,
+                else:  # 1.1.2 NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES
+                    raise InvalidGameInput(
+                        f"left_player={left_player_name}-{left_player_decision} vs right_player={right_player_name}-{right_player_decision}",
+                        GameErrorMessage.NO_LOWER_DICE_VALUE_WHEN_SAME_NUMBER_OF_DICES,
                     )
-                )
             elif (
-                left_player_decision.raise_.dice_face == "PACO"
-            ):  # 1.3.2 left player played with pacos
+                left_player_decision.raise_.n_dices
+                > right_player_decision.raise_.n_dices
+            ):  # 1.2 higher number of dices
                 if (
-                    left_player_decision.raise_.n_dices < half_nb_dices_pacos_needed
-                ):  # 1.3.2.1 left player played with pacos but did not raise enough
+                    right_player_decision.raise_.dice_face == PACO
+                ):  # 1.2.1 Left player higher number of dices but right player played PACOS
+                    if (
+                        left_player_decision.raise_.dice_face == PACO
+                    ):  # 1.2.1.1 left player played higher number of PACO
+                        return None
+                    elif (
+                        left_player_decision.raise_.dice_face != PACO
+                    ):  # 1.2.1.2 left player played higher number of dices but not PACOS
+                        if left_player_decision.raise_.n_dices >= (
+                            right_player_decision.raise_.n_dices * 2 + 1
+                        ):  # 1.2.1.2.1 Left player said more than twice +1
+                            return None
+                        elif left_player_decision.raise_.n_dices < (
+                            right_player_decision.raise_.n_dices * 2 + 1
+                        ):  # 1.2.1.2.2 Left player did not say more than twice +1
+                            raise InvalidGameInput(
+                                GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
+                                    "1.2.1.2.2",
+                                    left_player_name,
+                                    right_player_name,
+                                    right_player_decision.raise_.n_dices * 2 + 1,
+                                    left_player_decision.raise_.n_dices,
+                                )
+                            )
+                    else:
+                        raise NotImplementedError("1.2.1.3")
+                elif (
+                    right_player_decision.raise_.dice_face != PACO
+                ):  # 1.2.2 Left player higher number of dices and right player did not play pacos
+                    return None
+                else:
+                    raise NotImplementedError("1.2.3")
+            elif (
+                left_player_decision.raise_.n_dices
+                < right_player_decision.raise_.n_dices
+            ):  # 1.3 lower number of dices
+                half_nb_dices_pacos_needed = math.ceil(
+                    right_player_decision.raise_.n_dices / 2
+                )
+                if (
+                    left_player_decision.raise_.dice_face != "PACO"
+                ):  # 1.3.1 left player did not raise with pacos
                     raise InvalidGameInput(
                         GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
-                            "1.3.2.1",
+                            "1.3.1.1",
                             left_player_name,
                             right_player_name,
                             half_nb_dices_pacos_needed,
@@ -197,15 +215,40 @@ def is_decision_valid(
                         )
                     )
                 elif (
-                    left_player_decision.raise_.n_dices >= half_nb_dices_pacos_needed
-                ):  # 1.3.2.1 left player played with pacos  and raise enough
-                    return None
-                else:  # 1.3.2.2
-                    raise NotImplementedError("1.3.2.2")
-            else:  # 1.3.3
-                raise NotImplementedError("1.3.3")
-        else:  # 1.4
-            raise NotImplementedError("1.4")
+                    left_player_decision.raise_.dice_face == "PACO"
+                ):  # 1.3.2 left player played with pacos
+                    if (
+                        left_player_decision.raise_.n_dices < half_nb_dices_pacos_needed
+                    ):  # 1.3.2.1 left player played with pacos but did not raise enough
+                        raise InvalidGameInput(
+                            GameErrorMessage.NO_LOWER_NUMBER_OF_DICES_UNLESS_IF_AT_LEAST_THE_HALF_IN_PACOS(
+                                "1.3.2.1",
+                                left_player_name,
+                                right_player_name,
+                                half_nb_dices_pacos_needed,
+                                left_player_decision.raise_.n_dices,
+                            )
+                        )
+                    elif (
+                        left_player_decision.raise_.n_dices
+                        >= half_nb_dices_pacos_needed
+                    ):  # 1.3.2.1 left player played with pacos  and raise enough
+                        return None
+                    else:  # 1.3.2.2
+                        raise NotImplementedError("1.3.2.2")
+                else:  # 1.3.3
+                    raise NotImplementedError("1.3.3")
+            else:  # 1.4
+                raise NotImplementedError("1.4")
+    elif right_player_decision and not (left_player_decision):
+        if right_player_decision.bluff:
+            raise InvalidGameInput
+        elif right_player_decision.raise_:
+            return None
+    elif not (right_player_decision) and left_player_decision:
+        raise NotImplementedError
+    elif not (right_player_decision) and not (left_player_decision):
+        raise NotImplementedError
     elif (
         left_player_decision.bluff is True
     ):  # 2. Left player calls bluff on right player
@@ -213,7 +256,7 @@ def is_decision_valid(
     elif (
         left_player_decision.equal is True
     ):  # 3. Left Player calls equal on right players
-        raise NotImplementedError
+        raise NotImplementedError("3")
 
     else:  # 4. not raising, nor bluffing nor equalling, do not know what it is
         raise NotImplementedError("4")
@@ -242,20 +285,27 @@ class PerudoAI(Player):
         right_player_decision_pair: Tuple[
             Union[None, Player], Union[None, Decision]
         ] = (None, None),
+        left_player_decision_pair: Tuple[Union[None, Player], Union[None, Decision]] = (
+            None,
+            None,
+        ),
     ) -> Decision:
         right_player, right_player_decision = right_player_decision_pair
+        left_player, left_player_decision = left_player_decision_pair
         df_probas_raise, df_probas_bluff, probas = calculate_probas_of_all_decisions(
             total_nb_dices_left_in_game, self.dices
         )
-        # TODO: test
-        # df_probas_raise, df_probas_bluff = add_valid_decision(
-        #     df_probas_raise,
-        #     df_probas_bluff,
-        #     hand_nb,
-        #     (right_player, right_player_decision),
-        #     (self, left_player_decision),
-        #     total_nb_dices_left_in_game,
-        # )
+
+        df_probas_raise, df_probas_bluff = add_valid_decision(
+            df_probas_raise,
+            df_probas_bluff,
+            hand_nb,
+            (right_player, right_player_decision),
+            (left_player, left_player_decision),
+            total_nb_dices_left_in_game,
+        )
+        df_probas_raise = df_probas_raise.query(f"is_decision_valid==True")
+        df_probas_bluff = df_probas_bluff.query(f"is_decision_valid==True")
 
         if (hand_nb == 0) and (right_player_decision is None):
             best_n_dices, best_dice_face = max(
@@ -268,7 +318,9 @@ class PerudoAI(Player):
             )
 
         elif right_player_decision is not None:
-            proba_bluff = df_probas_bluff.loc[right_player_decision.raise_, :].squeeze()
+            proba_bluff = df_probas_bluff.loc[
+                right_player_decision.raise_, "proba"
+            ].squeeze()
             probas_raise = df_probas_raise[
                 df_probas_raise.index > right_player_decision.raise_
             ]
@@ -276,7 +328,7 @@ class PerudoAI(Player):
                 probas_raise[probas_raise.proba == max(probas_raise.proba)].index
             )
             max_proba_raise = probas_raise.loc[
-                (best_n_dices, best_dice_face), :
+                (best_n_dices, best_dice_face), "proba"
             ].squeeze()
             if max_proba_raise >= proba_bluff:
                 left_player_decision = Decision(
