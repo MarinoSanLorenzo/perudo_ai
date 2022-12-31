@@ -15,7 +15,10 @@ from perudo_ai.game import Game
 class TestGame:
     @pytest.mark.skip(reason="Not yet implemented")
     def test_run_game(self) -> None:
-        game = Game(players=[Player("Marino"), PerudoAI("AI_1"), PerudoAI("AI_2")])
+        game = Game(
+            players=[Player("Marino"), PerudoAI("AI_1"), PerudoAI("AI_2")],
+            n_init_dices=2,
+        )
         game.run()
 
     @pytest.mark.skip(reason="Not yet implemented")
