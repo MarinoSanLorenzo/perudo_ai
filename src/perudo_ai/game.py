@@ -58,16 +58,15 @@ class Game:
         while not self.is_game_finished:
             if self.hand_nb == 0:
                 print(f'{"*"*20} STARTING NEW HAND {"*"*20}\n')
-
                 if self.round == 0:
                     right_player = random.choice(list(self.players.values()))
                 elif self.round != 0:
                     looser_from_past_round = self._rounds_history[self.round - 1].get(
                         "looser"
                     )
-                    if looser_from_past_round:
+                    if looser_from_past_round in self.players:
                         right_player = self.players.get(looser_from_past_round)
-                    elif not looser_from_past_round:
+                    elif not (looser_from_past_round in self.players):
                         right_player = self._rounds_history[self.round - 1].get(
                             "left_player_to_looser_player"
                         )
@@ -75,7 +74,9 @@ class Game:
                         raise NotImplementedError
                 else:
                     raise NotImplementedError
-                right_player_decision = self.ask_player_to_make_decision(right_player)
+                right_player_decision = self.ask_player_to_make_decision(
+                    right_player, (right_player, None), (right_player.left_player, None)
+                )
             elif self.hand_nb != 0:
                 right_player, right_player_decision = left_player, left_player_decision
             else:
@@ -84,7 +85,7 @@ class Game:
             time.sleep(5)
             left_player = right_player.left_player
             left_player_decision = self.ask_player_to_make_decision(
-                left_player, right_player_decision
+                left_player, (right_player, right_player_decision), (left_player, None)
             )
             print(f"Left Player - {left_player.name}:\t{left_player_decision}")
 
@@ -96,11 +97,20 @@ class Game:
     def ask_player_to_make_decision(
         self,
         player: Union[Player, PerudoAI],
-        right_player_decision: Union[None, Decision] = None,
+        right_player_decision_pair: Tuple[
+            Union[None, Player], Union[None, Decision]
+        ] = (None, None),
+        left_player_decision_pair: Tuple[Union[None, Player], Union[None, Decision]] = (
+            None,
+            None,
+        ),
     ) -> Decision:
         if isinstance(player, PerudoAI):
             player_decision = player.take_decision(
-                self.hand_nb, self.total_nb_dices, right_player_decision
+                self.hand_nb,
+                self.total_nb_dices,
+                right_player_decision_pair,
+                left_player_decision_pair,
             )
         elif isinstance(player, Player):
             player_decision = player.take_decision()
@@ -556,13 +566,16 @@ class Game:
             "decision_code"
         )
         if self.is_game_finished:
-            if IS_DEBUG_MODE:
-                print("Logging round history...")
             self.log_rounds_history()
 
     def log_rounds_history(self) -> None:
         now = datetime.now().strftime("%Y_%m_%d_%H%M%S")
         rounds_history_logs_name = f"rounds_history_logs_name_{now}"
+        path_to_history_logs = os.path.join()
+        if IS_DEBUG_MODE:
+            print(
+                f"Logging round history to:\n{os.path.join(PATH_TO_ROUNDS_HISTORY, rounds_history_logs_name)}"
+            )
         with open(
             os.path.join(PATH_TO_ROUNDS_HISTORY, rounds_history_logs_name + ".json"),
             "w",
@@ -591,6 +604,7 @@ class Game:
         # shuffle all dices
         if IS_DEBUG_MODE:
             print(f"close round being called with {self.players}")
+            print(f"ALL DICES:\n{dict(self.get_all_dices_details())}")
         self.is_round_finished = True
         self.round += 1
         self.hand_nb = 0

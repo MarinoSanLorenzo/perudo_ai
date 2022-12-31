@@ -8,4 +8,3 @@ if __name__ == "__main__":
         players=[Player("Marino"), PerudoAI("AI_1"), PerudoAI("AI_2")], n_init_dices=2
     )
     game.run()
-    # TODO: shuffling dices check + AI decision PACO
